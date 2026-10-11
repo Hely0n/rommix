@@ -3,6 +3,7 @@ import { emudeck } from './emudeck/index.ts'
 import { retroarch } from './retroarch/index.ts'
 import { retrodeck } from './retrodeck/index.ts'
 import { shadps4 } from './shadps4/index.ts'
+import { xemu } from './xemu/index.ts'
 import { xenia } from './xenia/index.ts'
 import type {
   EmulatorDescriptor,
@@ -27,7 +28,8 @@ export const EMULATORS: readonly EmulatorDescriptor[] = [
   retroarch,
   eden,
   shadps4,
-  xenia
+  xenia,
+  xemu
 ]
 
 /**

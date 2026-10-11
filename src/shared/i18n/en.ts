@@ -625,7 +625,7 @@ export const en = {
   'saves.flycast':
     'Flycast keeps two VMU memory cards shared by every Dreamcast game, so there is no save file that belongs to this one. Save states are synced.',
   'saves.xemu':
-    'xemu keeps one emulated Xbox hard disk for every game, so there is no save file that belongs to this one.',
+    'Xemu keeps one emulated Xbox hard disk for every game, so there is no save file that belongs to this one.',
   'saves.xroar': 'XRoar writes no battery saves; only its states are synced.',
   'saves.azahar':
     'Azahar keeps saves inside an emulated SD card tree keyed by title id, which RomMix cannot match to this game.',
@@ -645,6 +645,8 @@ export const en = {
     'Install firmware in Eden: Tools → Install Firmware, pointed at the file below.',
   'setup.shadps4Roms':
     "Add RomMix's ROM folder to shadPS4, so its game list finds what you download.",
+  'setup.xemuFiles':
+    'Select the MCPX boot ROM, flash ROM and hard disk image in Xemu: Settings → System → Files.',
 
   'saves.switchNoTitleId':
     'RomMix could not read a title id for this game, which is how {emulator} names its save ' +

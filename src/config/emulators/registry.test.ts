@@ -22,6 +22,7 @@ import { emudeck, ROM_PLACEHOLDER } from './emudeck/index.ts'
 import { retroarch } from './retroarch/index.ts'
 import { retrodeck } from './retrodeck/index.ts'
 import { shadps4 } from './shadps4/index.ts'
+import { xemu } from './xemu/index.ts'
 import { xenia } from './xenia/index.ts'
 import { example } from './example/index.ts'
 import type { EmulatorDescriptor, EmulatorState } from './types.ts'
@@ -727,6 +728,38 @@ test('Xenia runs the Xbox 360 and offers its builds as an AppImage', () => {
   // Real asset names from the main repository's release feed.
   assert.equal(isInstallableAsset('xenia_canary_linux.AppImage', source), true)
   assert.equal(isInstallableAsset('xenia_canary_windows.7z', source), false)
+})
+
+test('Xemu is started fullscreen with the disc in its drive', () => {
+  const argv = xemu.launch({
+    exec: ['flatpak', 'run', 'app.xemu.xemu'],
+    installRef: 'app.xemu.xemu',
+    system: 'xbox',
+    romPath: '/roms/xbox/game.iso'
+  })
+  assert.deepEqual(argv, [
+    'flatpak',
+    'run',
+    'app.xemu.xemu',
+    '-full-screen',
+    '-dvd_path',
+    '/roms/xbox/game.iso'
+  ])
+})
+
+test('Xemu runs the original Xbox and offers its release build, not the debug one', () => {
+  assert.equal(supportsSystem(xemu, 'xbox'), true)
+  assert.equal(supportsSystem(xemu, 'xbox360'), false)
+  const source = releaseSource(xemu)
+  assert.ok(source)
+  // Real asset names from Xemu's release feed.
+  assert.equal(isInstallableAsset('xemu-0.8.136-x86_64.AppImage', source), true)
+  assert.equal(isInstallableAsset('xemu-0.8.136-53-g478b4f4961-aarch64.AppImage', source), true)
+  assert.equal(isInstallableAsset('xemu-0.8.136-53-g478b4f4961-dbg-x86_64.AppImage', source), false)
+  assert.equal(
+    isInstallableAsset('xemu-0.8.136-53-g478b4f4961-macos-universal-unsigned.zip', source),
+    false
+  )
 })
 
 test('nothing under src/config imports a node builtin', () => {

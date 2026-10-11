@@ -629,7 +629,7 @@ export const de: Catalog = {
   'saves.flycast':
     'Flycast führt zwei VMU-Speicherkarten für alle Dreamcast-Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
   'saves.xemu':
-    'xemu führt eine einzige emulierte Xbox-Festplatte für alle Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel.',
+    'Xemu führt eine einzige emulierte Xbox-Festplatte für alle Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel.',
   'saves.xroar':
     'XRoar schreibt keine Batterie-Speicherstände; nur seine Savestates werden synchronisiert.',
   'saves.azahar':
@@ -650,6 +650,8 @@ export const de: Catalog = {
     'Firmware in Eden installieren: Tools → Install Firmware, auf die Datei unten zeigen lassen.',
   'setup.shadps4Roms':
     'Den ROM-Ordner von RomMix in shadPS4 eintragen, damit dessen Spieleliste findet, was Sie herunterladen.',
+  'setup.xemuFiles':
+    'Boot-ROM (MCPX), Flash-ROM und Festplattenabbild in Xemu auswählen: Settings → System → Files.',
 
   'saves.switchNoTitleId':
     'RomMix konnte für dieses Spiel keine Title-ID lesen, und genau danach benennt {emulator} ' +

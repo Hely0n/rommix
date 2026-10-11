@@ -199,7 +199,7 @@ export const EMUDECK_LAUNCHERS: Readonly<Record<string, readonly EmuDeckLauncher
   psp: [standalone('ppsspp', 'PPSSPP', 'ppsspp.sh', ['-f', '-g', ROM_PLACEHOLDER])],
 
   // -- Microsoft ------------------------------------------------------------
-  xbox: [standalone('xemu', 'xemu', 'xemu-emu.sh', ['-full-screen', '-dvd_path', ROM_PLACEHOLDER])],
+  xbox: [standalone('xemu', 'Xemu', 'xemu-emu.sh', ['-full-screen', '-dvd_path', ROM_PLACEHOLDER])],
   // Xenia runs under Proton, so the path it is given has to be a Windows one.
   xbox360: [standalone('xenia', 'Xenia', 'xenia.sh', [`Z:${ROM_PLACEHOLDER}`])],
   dos: [core('dosbox_pure', 'DOSBox Pure', 'dosbox_pure')],

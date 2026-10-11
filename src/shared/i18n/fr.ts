@@ -624,7 +624,7 @@ export const fr: Catalog = {
   'saves.flycast':
     "Flycast garde deux cartes mémoire VMU partagées par tous les jeux Dreamcast : aucune sauvegarde n'appartient donc à celui-ci. Les états de sauvegarde sont synchronisés.",
   'saves.xemu':
-    "xemu garde un seul disque dur Xbox émulé pour tous les jeux : aucune sauvegarde n'appartient donc à celui-ci.",
+    "Xemu garde un seul disque dur Xbox émulé pour tous les jeux : aucune sauvegarde n'appartient donc à celui-ci.",
   'saves.xroar': "XRoar n'écrit aucune sauvegarde sur pile ; seuls ses états sont synchronisés.",
   'saves.azahar':
     'Azahar range ses sauvegardes dans une arborescence de carte SD émulée indexée par identifiant de titre, que RomMix ne peut pas rattacher à ce jeu.',
@@ -644,6 +644,8 @@ export const fr: Catalog = {
     'Installez le firmware dans Eden : Tools → Install Firmware, en le pointant sur le fichier ci-dessous.',
   'setup.shadps4Roms':
     'Ajoutez le dossier de ROM de RomMix à shadPS4, pour que sa liste de jeux trouve ce que vous téléchargez.',
+  'setup.xemuFiles':
+    'Sélectionnez la ROM de démarrage MCPX, la ROM flash et l’image de disque dur dans Xemu : Settings → System → Files.',
 
   'saves.switchNoTitleId':
     'RomMix n’a pas pu lire d’identifiant de titre pour ce jeu, qui est ce avec quoi {emulator} ' +
