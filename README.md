@@ -85,13 +85,14 @@ Demo: https://leclercb.github.io/rommix/demo/
 - **A controller**, recommended but not required.
 - **At least one emulator**, from the ones RomMix drives:
 
-  | Emulator      | Covers                            | Installed by RomMix                           |
-  | ------------- | --------------------------------- | --------------------------------------------- |
-  | **RetroDECK** | The NES to the PS3                | ✅ Flatpak                                    |
-  | **EmuDeck**   | The NES to the Switch and the 360 | ❌ Its own installer, see [EmuDeck](#emudeck) |
-  | **RetroArch** | One libretro core per system      | ✅ Flatpak                                    |
-  | **Eden**      | Nintendo Switch                   | ✅ AppImage                                   |
-  | **shadPS4**   | PlayStation 4                     | ✅ Flatpak and AppImage                       |
+  | Emulator         | Covers                            | Installed by RomMix                           |
+  | ---------------- | --------------------------------- | --------------------------------------------- |
+  | **RetroDECK**    | The NES to the PS3                | ✅ Flatpak                                    |
+  | **EmuDeck**      | The NES to the Switch and the 360 | ❌ Its own installer, see [EmuDeck](#emudeck) |
+  | **RetroArch**    | One libretro core per system      | ✅ Flatpak                                    |
+  | **Eden**         | Nintendo Switch                   | ✅ AppImage                                   |
+  | **shadPS4**      | PlayStation 4                     | ✅ Flatpak and AppImage                       |
+  | **Xenia Canary** | Xbox 360                          | ✅ AppImage                                   |
 
   **Emulators** → **Platforms** shows what every system resolves to. Start with
   RetroDECK if you have none — it covers the most platforms.

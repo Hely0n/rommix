@@ -22,6 +22,7 @@ import { emudeck, ROM_PLACEHOLDER } from './emudeck/index.ts'
 import { retroarch } from './retroarch/index.ts'
 import { retrodeck } from './retrodeck/index.ts'
 import { shadps4 } from './shadps4/index.ts'
+import { xenia } from './xenia/index.ts'
 import { example } from './example/index.ts'
 import type { EmulatorDescriptor, EmulatorState } from './types.ts'
 
@@ -686,6 +687,46 @@ test("a project publishing every platform as a zip offers only this one's", () =
   assert.equal(isInstallableAsset('shadps4-linux-sdl-0.18.0.zip', source), true)
   assert.equal(isInstallableAsset('shadps4-macos-sdl-0.18.0.zip', source), false)
   assert.equal(isInstallableAsset('shadps4-win64-sdl-0.18.0.zip', source), false)
+})
+
+test('Xenia is started fullscreen on the ROM it is given', () => {
+  const argv = xenia.launch({
+    exec: ['/home/u/Applications/xenia_canary_linux.AppImage'],
+    installRef: '/home/u/Applications/xenia_canary_linux.AppImage',
+    system: 'xbox360',
+    romPath: '/roms/xbox360/game.iso'
+  })
+  assert.deepEqual(argv, [
+    '/home/u/Applications/xenia_canary_linux.AppImage',
+    '--fullscreen',
+    '/roms/xbox360/game.iso'
+  ])
+})
+
+test('Xenia opens a Games on Demand package by its header, not by a data part', () => {
+  // The largest file of a GoD package is a part inside `<header>.data/`; the
+  // header beside that folder is what Xenia loads.
+  const argv = xenia.launch({
+    exec: ['/usr/bin/xenia_canary'],
+    installRef: '/usr/bin/xenia_canary',
+    system: 'xbox360',
+    romPath: '/roms/xbox360/Game/4D5307E6/00007000/0123ABCD.data/Data0000'
+  })
+  assert.deepEqual(argv, [
+    '/usr/bin/xenia_canary',
+    '--fullscreen',
+    '/roms/xbox360/Game/4D5307E6/00007000/0123ABCD'
+  ])
+})
+
+test('Xenia runs the Xbox 360 and offers its builds as an AppImage', () => {
+  assert.equal(supportsSystem(xenia, 'xbox360'), true)
+  assert.equal(supportsSystem(xenia, 'xbox'), false)
+  const source = releaseSource(xenia)
+  assert.ok(source)
+  // Real asset names from the main repository's release feed.
+  assert.equal(isInstallableAsset('xenia_canary_linux.AppImage', source), true)
+  assert.equal(isInstallableAsset('xenia_canary_windows.7z', source), false)
 })
 
 test('nothing under src/config imports a node builtin', () => {

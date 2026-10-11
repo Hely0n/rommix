@@ -72,6 +72,7 @@
   "emulators.retroarch": "One libretro core per system",
   "emulators.eden": "Nintendo Switch",
   "emulators.shadps4": "PlayStation 4",
+  "emulators.xenia": "Xbox 360",
   "emulators.ownInstaller": "Its own installer",
   "emulators.flatpakAndAppImage": "Flatpak and AppImage",
 
