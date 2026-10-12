@@ -645,8 +645,6 @@ export const en = {
     'Install firmware in Eden: Tools → Install Firmware, pointed at the file below.',
   'setup.shadps4Roms':
     "Add RomMix's ROM folder to shadPS4, so its game list finds what you download.",
-  'setup.xemuFiles':
-    'Select the MCPX boot ROM, flash ROM and hard disk image in Xemu: Settings → System → Files.',
 
   'saves.switchNoTitleId':
     'RomMix could not read a title id for this game, which is how {emulator} names its save ' +

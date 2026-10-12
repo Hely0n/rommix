@@ -68,7 +68,6 @@
   "emulators.eden": "Nintendo Switch",
   "emulators.shadps4": "PlayStation 4",
   "emulators.xenia": "Xbox 360",
-  "emulators.xemu": "Xbox",
   "emulators.ownInstaller": "Su propio instalador",
   "emulators.flatpakAndAppImage": "Flatpak y AppImage",
 

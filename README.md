@@ -93,7 +93,6 @@ Demo: https://leclercb.github.io/rommix/demo/
   | **Eden**         | Nintendo Switch                   | ✅ AppImage                                   |
   | **shadPS4**      | PlayStation 4                     | ✅ Flatpak and AppImage                       |
   | **Xenia Canary** | Xbox 360                          | ✅ AppImage                                   |
-  | **Xemu**         | Xbox                              | ✅ Flatpak and AppImage                       |
 
   **Emulators** → **Platforms** shows what every system resolves to. Start with
   RetroDECK if you have none — it covers the most platforms.

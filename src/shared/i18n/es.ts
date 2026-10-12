@@ -637,8 +637,6 @@ export const es: Catalog = {
     'Instala el firmware en Eden: Tools → Install Firmware, apuntando al archivo de abajo.',
   'setup.shadps4Roms':
     'Añade la carpeta de ROM de RomMix a shadPS4, para que su lista de juegos encuentre lo que descargas.',
-  'setup.xemuFiles':
-    'Selecciona la ROM de arranque MCPX, la ROM flash y la imagen de disco duro en Xemu: Settings → System → Files.',
 
   'saves.switchNoTitleId':
     'RomMix no ha podido leer un identificador de título para este juego, que es con lo que ' +
