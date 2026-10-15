@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { eden } from './eden/index.ts'
-import { emudeck, EMUDECK_LAUNCHERS } from './emudeck/index.ts'
+import { emudeck, emuDeckCore, EMUDECK_LAUNCHERS } from './emudeck/index.ts'
 import {
   emuDeckSaveFolder,
   FOLDERS,
@@ -18,7 +18,8 @@ import { retroarch } from './retroarch/index.ts'
 import { retrodeck } from './retrodeck/index.ts'
 import { shadps4 } from './shadps4/index.ts'
 import { EMULATORS } from './index.ts'
-import { isKnownSystem } from '../systems.ts'
+import { coreLibraryName } from './libretro.ts'
+import { coreForSystem, isKnownSystem, systemsWithCore } from '../systems.ts'
 import type { EmulatorDescriptor } from './types.ts'
 import type { SaveContext, SaveEnvironment, SavePaths } from './savepaths.ts'
 import { createI18n, localize } from '@shared/i18n'
@@ -324,14 +325,16 @@ test('an unknown core writes to the unsorted directory rather than a guessed fol
     files: {
       '/cfg/retroarch/retroarch.cfg': retroArchCfg({
         savefile_directory: '/lib/saves',
-        sort_savefiles_enable: 'true'
+        sort_savefiles_enable: 'true',
+        // A system with no core mapping falls back to the core loaded last,
+        // and this one is not in the table of names.
+        libretro_path: '/cores/invented_libretro.so'
       })
     }
   })
   const paths = resolve(retroarch, {
-    // `hatari` has a core mapping but no known library name in the table.
-    romPath: '/lib/roms/atarist/game.st',
-    system: 'atarist',
+    romPath: '/lib/roms/atarixe/game.atr',
+    system: 'atarixe',
     configDir: '/cfg',
     env
   })
@@ -1387,4 +1390,16 @@ test('every RetroDECK save layout is one a command label reaches', () => {
     [],
     'a save layout no label reaches: name it in COMPONENT_BY_LABEL, or drop the row'
   )
+})
+
+test('every core RomMix loads has the name it files saves under', () => {
+  // Without one, a save pulled for a user who sorts saves by core lands in the
+  // unsorted folder, where the core never looks. See `CORE_LIBRARY_NAMES`.
+  const cores = new Set(systemsWithCore().map((system) => coreForSystem(system)))
+  for (const options of Object.values(EMUDECK_LAUNCHERS)) {
+    for (const option of options) cores.add(emuDeckCore(option))
+  }
+  cores.delete(null)
+  const unnamed = [...cores].filter((core) => coreLibraryName(core) === null)
+  assert.deepEqual(unnamed, [])
 })
