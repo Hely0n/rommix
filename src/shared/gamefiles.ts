@@ -4,6 +4,7 @@
 import {
   CONTAINER_SYSTEMS,
   DESCRIPTOR_EXTENSIONS,
+  IMAGE_ONLY_SYSTEMS,
   ROMSET_SYSTEMS,
   SIDECAR_EXTENSIONS
 } from '../config/romfiles.ts'
@@ -86,7 +87,8 @@ function extensionOf(name: string): string {
  * manuals and artwork shipped beside it.
  *
  * `system` is the ES-DE system the game belongs to, and is what excuses a
- * handful of them from the descriptor rule — see `CONTAINER_SYSTEMS`. Omitting
+ * handful of them from the descriptor rule — see `CONTAINER_SYSTEMS` and
+ * `IMAGE_ONLY_SYSTEMS`. Omitting
  * it asks the question that has always been asked, which is the right one
  * everywhere else.
  */
@@ -101,6 +103,13 @@ export function chooseLaunchFile(files: readonly GameFile[], system?: string): s
     // describes — a homebrew .nro, or a dump in some other format — so the
     // general rule answers instead of nothing being launchable.
     if (container) return container
+  }
+
+  if (system !== undefined && IMAGE_ONLY_SYSTEMS.includes(system)) {
+    const images = candidates.filter(
+      (file) => !DESCRIPTOR_EXTENSIONS.includes(extensionOf(file.name))
+    )
+    return images.length > 0 ? largest(images).name : null
   }
 
   for (const wanted of DESCRIPTOR_EXTENSIONS) {
@@ -135,11 +144,15 @@ function chooseContainer(candidates: readonly GameFile[], format: ContainerForma
  * Is this a file the system's emulators can be handed at all?
  *
  * Only ever answers no where RomMix knows the whole set of things a game can
- * be — the container systems — since anywhere else the answer would have to be
- * a list of every ROM extension in existence, and a game with an unexpected one
- * would be declared unplayable for no better reason than that.
+ * be — the container systems — or knows a thing it cannot be: a descriptor on
+ * a system whose emulators take only the image. Anywhere else the answer would
+ * have to be a list of every ROM extension in existence, and a game with an
+ * unexpected one would be declared unplayable for no better reason than that.
  */
 export function isLaunchable(name: string, system?: string): boolean {
+  if (system !== undefined && IMAGE_ONLY_SYSTEMS.includes(system)) {
+    return !DESCRIPTOR_EXTENSIONS.includes(extensionOf(name))
+  }
   const format = system ? CONTAINER_SYSTEMS[system] : undefined
   return !format || format.extensions.includes(extensionOf(name))
 }

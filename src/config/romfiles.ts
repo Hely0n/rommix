@@ -104,6 +104,18 @@ export const ROMSET_SYSTEMS: readonly string[] = [
  */
 export const DESCRIPTOR_EXTENSIONS: readonly string[] = ['.m3u', '.cue', '.gdi']
 
+/**
+ * Systems whose emulators are handed the disc image, never a descriptor.
+ *
+ * PlayStation 2: PCSX2, and the libretro core built from it, open a disc by
+ * its extension, and none of the descriptors above is one they accept — see
+ * `VMManager::IsDiscFileName`. A cue sheet handed over is read as a raw image
+ * and the game does not boot, whatever the file dialog's filter suggests. The
+ * image it names is the disc, so the general rule's fallback to the largest
+ * file is the right answer here.
+ */
+export const IMAGE_ONLY_SYSTEMS: readonly string[] = ['ps2']
+
 /** How to tell one system's containers apart. See `CONTAINER_SYSTEMS`. */
 export interface ContainerFormat {
   /** The extensions that are the game itself, and the only ones to launch. */

@@ -171,6 +171,30 @@ test('a playlist is not launchable on a container system', () => {
   assert.equal(isLaunchable('Sonic.md'), true)
 })
 
+test('a PS2 disc is the image, not the cue sheet naming it', () => {
+  // PCSX2 reads a cue as a raw image and the game does not boot.
+  const chosen = chooseLaunchFile(
+    [
+      file('Virtua Cop - Elite Edition (Europe).bin', 700_000_000),
+      file('Virtua Cop - Elite Edition (Europe).cue', 512)
+    ],
+    'ps2'
+  )
+  assert.equal(chosen, 'Virtua Cop - Elite Edition (Europe).bin')
+})
+
+test('and a PS2 set of nothing but descriptors has nothing to launch', () => {
+  assert.equal(chooseLaunchFile([file('Game.cue'), file('Game.m3u')], 'ps2'), null)
+})
+
+test('a descriptor is not launchable on PS2', () => {
+  // What sends a game recorded with its cue back to disk for the image.
+  assert.equal(isLaunchable('Virtua Cop.cue', 'ps2'), false)
+  assert.equal(isLaunchable('Virtua Cop.m3u', 'ps2'), false)
+  assert.equal(isLaunchable('Virtua Cop.bin', 'ps2'), true)
+  assert.equal(isLaunchable('Virtua Cop.cue', 'psx'), true)
+})
+
 test('an arcade archive is the game rather than something to open', () => {
   // The failure this prevents: a romset unpacked into the chip dumps inside it,
   // which every arcade emulator refuses — the archive is what carries the name
