@@ -32,6 +32,48 @@ export interface LibraryView {
   search: string
   /** The RomM platform the grid is narrowed to, or every platform. */
   platformId?: number
+  /**
+   * The card that was pressed, by `GameTile.romId`, to take the highlight
+   * back on return rather than leaving it at the top of the grid.
+   */
+  romId?: number
+  /**
+   * How many cards the grid held when it was left.
+   *
+   * The pressed card can be pages down, and a grid drawn afresh holds the
+   * first page only — see `usePagedRoms.initialCount`.
+   */
+  held?: number
+}
+
+/**
+ * What a collection's grid was showing when a game was opened from it.
+ * The same two fields as `LibraryView`, for the same reasons.
+ */
+export type CollectionView = Required<Pick<LibraryView, 'romId' | 'held'>>
+
+/**
+ * Which collection was opened from the Collections screen, and which of its
+ * two lists were open — the card is not drawn under a shut lid, so the lids
+ * travel with it.
+ */
+export interface CollectionsView {
+  collectionId: number | string
+  openMine: boolean
+  openDerived: boolean
+}
+
+/**
+ * Which card on Home was pressed to open a game, so B lands back on it.
+ *
+ * The shelf as well as the game, because one game can sit on several shelves
+ * at once — last played, a favourite and on this disk. See `LibraryView`,
+ * which is the same idea for the grid.
+ */
+export interface HomeView {
+  /** As `GameRow.shelf` names it, or `hero` for the featured game. */
+  shelf: string
+  romId: number
 }
 
 export type Route =
@@ -39,7 +81,7 @@ export type Route =
    * First-run setup, and the sign-in form it ends on. See `SetupScreen`.
    */
   | { name: 'setup' }
-  | { name: 'home' }
+  | { name: 'home'; view?: HomeView }
   | { name: 'library'; view?: LibraryView }
   /**
    * One game. `fromVersions` says it was opened from another dump's versions
@@ -57,8 +99,8 @@ export type Route =
    * which is the distinction the server itself draws, right down to the query
    * parameter each is passed as.
    */
-  | { name: 'collection'; collectionId: number | string; title: string }
-  | { name: 'collections' }
+  | { name: 'collection'; collectionId: number | string; title: string; view?: CollectionView }
+  | { name: 'collections'; view?: CollectionsView }
   | { name: 'bios' }
   | { name: 'emulators' }
   /**

@@ -1,7 +1,7 @@
 import { type JSX, useState } from 'react'
 import { GameCard, Hints, PageTitle, Spinner, tileFromRom } from '../../components'
 import { usePagedRoms } from '../../paging'
-import { useApp, useI18n } from '../../state'
+import { useApp, useI18n, type CollectionView } from '../../state'
 
 /**
  * One collection, as a grid of what is on it.
@@ -18,14 +18,16 @@ import { useApp, useI18n } from '../../state'
  */
 export function CollectionScreen({
   collectionId,
-  title
+  title,
+  view
 }: {
   /** A number for a collection the user made, a string for one RomM derived. */
   collectionId: number | string
   title: string
+  view?: CollectionView
 }): JSX.Element {
   const { t } = useI18n()
-  const { installedIds, navigate } = useApp()
+  const { installedIds, navigate, revise } = useApp()
 
   const [error, setError] = useState<string | null>(null)
   const { roms, total, loading, sentinel } = usePagedRoms(
@@ -34,7 +36,7 @@ export function CollectionScreen({
     typeof collectionId === 'string'
       ? { virtual_collection_id: collectionId }
       : { collection_id: collectionId },
-    { onError: setError }
+    { initialCount: view?.held, onError: setError }
   )
 
   return (
@@ -50,8 +52,19 @@ export function CollectionScreen({
             key={rom.id}
             tile={tileFromRom(rom)}
             installed={installedIds.has(rom.id)}
-            onSelect={() => navigate({ name: 'game', romId: rom.id })}
+            onSelect={() => {
+              // The card pressed goes onto this screen's own step first, so B
+              // off the game lands back on it. See `CollectionView`.
+              revise({
+                name: 'collection',
+                collectionId,
+                title,
+                view: { romId: rom.id, held: roms.length }
+              })
+              navigate({ name: 'game', romId: rom.id })
+            }}
             showPlatform
+            autoFocus={rom.id === view?.romId}
           />
         ))}
       </div>

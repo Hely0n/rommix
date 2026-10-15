@@ -16,7 +16,7 @@ import {
 import { Icon } from '../../icons'
 import { useAction, useFocusable, useKeyLabel } from '../../input/focus'
 import { useRomPages } from '../../paging'
-import { useApp, useI18n } from '../../state'
+import { useApp, useI18n, type HomeView } from '../../state'
 
 /**
  * The landing screen: a hero for the highlighted game and a few shelves,
@@ -69,9 +69,9 @@ function useShelf(query: RomQuery, offline: boolean | null): Shelf {
 /** How many of the games on disk the shelf shows before Downloads takes over. */
 const READY_TO_PLAY_SHELF = 30
 
-export function HomeScreen(): JSX.Element {
+export function HomeScreen({ view }: { view?: HomeView }): JSX.Element {
   const { t } = useI18n()
-  const { installed, installedIds, navigate, canGoBack, offline } = useApp()
+  const { installed, installedIds, navigate, revise, canGoBack, offline } = useApp()
 
   /**
    * The games on this device, newest install first.
@@ -146,8 +146,21 @@ export function HomeScreen(): JSX.Element {
   // The copy on this disk where a grouped tile stands for several — see
   // `romToOpen`. The shelves built from the download index are one ROM each and
   // answer themselves.
-  const open = (tile: GameTile): void =>
+  //
+  // The card goes onto this screen's own step first, so B off the game lands
+  // back on it. See `HomeView`.
+  const open = (shelf: string, tile: GameTile): void => {
+    revise({ name: 'home', view: { shelf, romId: tile.romId } })
     navigate({ name: 'game', romId: romToOpen(tile, installedIds) })
+  }
+  /**
+   * The card on `shelf` that a return lands on, if any.
+   *
+   * The hero autofocuses as well, and is drawn first: its claim is the
+   * fallback, overridden by the card's where that card is still on its shelf.
+   */
+  const focusOn = (shelf: string): number | undefined =>
+    view?.shelf === shelf ? view.romId : undefined
 
   return (
     <div className="content">
@@ -183,7 +196,7 @@ export function HomeScreen(): JSX.Element {
           // the grouped `recentlyAdded` shelf, so it stands for the same cover as
           // the first tile — and `tiles.ts` states the rule both are held to: the
           // version a tile says is downloaded is the version pressing it opens.
-          onSelect={() => open(tileFromRom(highlight))}
+          onSelect={() => open('hero', tileFromRom(highlight))}
         />
       ) : null}
 
@@ -192,7 +205,8 @@ export function HomeScreen(): JSX.Element {
         shelf="continue"
         tiles={continuePlaying.items.map((rom) => tileFromRom(rom))}
         installedIds={installedIds}
-        onSelect={open}
+        onSelect={(tile) => open('continue', tile)}
+        focusRomId={focusOn('continue')}
         onEndReached={continuePlaying.loadMore}
       />
       {/* No onEndReached: this shelf is the download index, which is already
@@ -202,14 +216,16 @@ export function HomeScreen(): JSX.Element {
         shelf="ready"
         tiles={readyToPlay}
         installedIds={installedIds}
-        onSelect={open}
+        onSelect={(tile) => open('ready', tile)}
+        focusRomId={focusOn('ready')}
       />
       <GameRow
         title={t('home.favourites')}
         shelf="favourites"
         tiles={favourites.items.map((rom) => tileFromRom(rom, true))}
         installedIds={installedIds}
-        onSelect={open}
+        onSelect={(tile) => open('favourites', tile)}
+        focusRomId={focusOn('favourites')}
         onEndReached={favourites.loadMore}
       />
       <GameRow
@@ -217,7 +233,8 @@ export function HomeScreen(): JSX.Element {
         shelf="recent"
         tiles={recentlyAdded.items.map((rom) => tileFromRom(rom, true))}
         installedIds={installedIds}
-        onSelect={open}
+        onSelect={(tile) => open('recent', tile)}
+        focusRomId={focusOn('recent')}
         onEndReached={recentlyAdded.loadMore}
       />
 

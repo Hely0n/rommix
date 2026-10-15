@@ -17,15 +17,18 @@ export function GameCard({
   tile,
   installed,
   onSelect,
-  showPlatform = false
+  showPlatform = false,
+  autoFocus = false
 }: {
   tile: GameTile
   installed: boolean
   onSelect: () => void
   showPlatform?: boolean
+  /** Take the highlight on arrival: the card a game was opened from. */
+  autoFocus?: boolean
 }): JSX.Element {
   const { t } = useI18n()
-  const { ref, props } = useFocusable({ onSelect, actionLabel: t('action.open') })
+  const { ref, props } = useFocusable({ onSelect, autoFocus, actionLabel: t('action.open') })
 
   return (
     <button
@@ -91,7 +94,8 @@ export function GameRow({
   tiles,
   installedIds,
   onSelect,
-  onEndReached
+  onEndReached,
+  focusRomId
 }: {
   title: string
   /** Which shelf this is, for `npm run test:app`. See CONTRIBUTING. */
@@ -100,6 +104,8 @@ export function GameRow({
   installedIds: Set<number>
   onSelect: (tile: GameTile) => void
   onEndReached?: () => void
+  /** The card to take the highlight on arrival, by `GameTile.romId`. */
+  focusRomId?: number
 }): JSX.Element | null {
   const rowRef = useRef<HTMLDivElement | null>(null)
   const sentinelRef = useRef<HTMLDivElement | null>(null)
@@ -138,6 +144,7 @@ export function GameRow({
               installed={tileInstalled(tile, installedIds)}
               onSelect={() => onSelect(tile)}
               showPlatform
+              autoFocus={tile.romId === focusRomId}
             />
           ))}
           {onEndReached ? (

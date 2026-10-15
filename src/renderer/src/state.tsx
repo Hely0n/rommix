@@ -30,7 +30,14 @@ import { fileNameOf } from '@shared/gamefiles'
 // Where RomMix is, and the rules for moving between screens, live in
 // `history.ts` — pure, and testable for it. Re-exported because this is where
 // every screen already reaches for the type.
-export type { LibraryView, Route, SettingsTarget } from './history'
+export type {
+  CollectionsView,
+  CollectionView,
+  HomeView,
+  LibraryView,
+  Route,
+  SettingsTarget
+} from './history'
 
 export interface Toast {
   id: number

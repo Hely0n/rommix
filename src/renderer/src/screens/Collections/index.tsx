@@ -3,7 +3,7 @@ import type { RommCollection, RommCollectionBase, RommVirtualCollection } from '
 import { CoverMosaic, Hints, PageTitle, Spinner } from '../../components'
 import { Icon } from '../../icons'
 import { useFocusable } from '../../input/focus'
-import { useApp, useI18n } from '../../state'
+import { useApp, useI18n, type CollectionsView } from '../../state'
 
 /**
  * The shelves the user made on RomM, as shelves.
@@ -14,9 +14,9 @@ import { useApp, useI18n } from '../../state'
  * said so. So it is listed rather than derived, and it is the same list here as
  * in RomM's own web interface.
  */
-export function CollectionsScreen(): JSX.Element {
+export function CollectionsScreen({ view }: { view?: CollectionsView }): JSX.Element {
   const { t } = useI18n()
-  const { navigate } = useApp()
+  const { navigate, revise } = useApp()
   const [own, setOwn] = useState<RommCollection[] | null>(null)
   const [derived, setDerived] = useState<RommVirtualCollection[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -34,10 +34,11 @@ export function CollectionsScreen(): JSX.Element {
    * the page and the bottom of it.
    *
    * Not remembered between visits, like the grouping on Downloads. It is a way
-   * of looking at the page rather than a preference about the library.
+   * of looking at the page rather than a preference about the library. Coming
+   * back from a collection is not a visit: see `CollectionsView`.
    */
-  const [openMine, setOpenMine] = useState(true)
-  const [openDerived, setOpenDerived] = useState(false)
+  const [openMine, setOpenMine] = useState(view?.openMine ?? true)
+  const [openDerived, setOpenDerived] = useState(view?.openDerived ?? false)
 
   useEffect(() => {
     void window.rommix.library
@@ -79,8 +80,10 @@ export function CollectionsScreen(): JSX.Element {
   const mine = stocked(own)
   const theirs = stocked(derived)
 
-  const open = (collection: RommCollection | RommVirtualCollection): void =>
+  const open = (collection: RommCollection | RommVirtualCollection): void => {
+    revise({ name: 'collections', view: { collectionId: collection.id, openMine, openDerived } })
     navigate({ name: 'collection', collectionId: collection.id, title: collection.name })
+  }
 
   return (
     <div className="content">
@@ -100,6 +103,7 @@ export function CollectionsScreen(): JSX.Element {
           open={openMine}
           onToggle={() => setOpenMine((current) => !current)}
           onOpen={open}
+          focusId={view?.collectionId}
         />
       ) : null}
 
@@ -110,6 +114,7 @@ export function CollectionsScreen(): JSX.Element {
           open={openDerived}
           onToggle={() => setOpenDerived((current) => !current)}
           onOpen={open}
+          focusId={view?.collectionId}
         />
       ) : null}
 
@@ -139,13 +144,16 @@ function CollectionGroup({
   collections,
   open,
   onToggle,
-  onOpen
+  onOpen,
+  focusId
 }: {
   title: string
   collections: (RommCollection | RommVirtualCollection)[]
   open: boolean
   onToggle: () => void
   onOpen: (collection: RommCollection | RommVirtualCollection) => void
+  /** The collection to take the highlight on arrival. */
+  focusId?: number | string
 }): JSX.Element {
   const { t } = useI18n()
   const { ref, props } = useFocusable({
@@ -171,6 +179,7 @@ function CollectionGroup({
                 key={collection.id}
                 collection={collection}
                 onSelect={() => onOpen(collection)}
+                autoFocus={collection.id === focusId}
               />
             ))}
           </div>
@@ -190,13 +199,16 @@ function CollectionGroup({
  */
 function CollectionCard({
   collection,
-  onSelect
+  onSelect,
+  autoFocus = false
 }: {
   collection: RommCollection | RommVirtualCollection
   onSelect: () => void
+  /** Take the highlight on arrival: the collection just come back from. */
+  autoFocus?: boolean
 }): JSX.Element {
   const { t } = useI18n()
-  const { ref, props } = useFocusable({ onSelect, actionLabel: t('action.open') })
+  const { ref, props } = useFocusable({ onSelect, autoFocus, actionLabel: t('action.open') })
   const chosen = collection.path_cover_small ?? collection.path_cover_large
   const covers = chosen ? [chosen] : collection.path_covers_small
 

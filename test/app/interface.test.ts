@@ -3,7 +3,7 @@ import { after, before, describe, test } from 'node:test'
 import { dateFormatters } from '@shared/i18n/dates.ts'
 import { en } from '@shared/i18n/en.ts'
 import { fr } from '@shared/i18n/fr.ts'
-import { POLL_MS, SETTLE_TIMEOUT_MS, type App } from './driver.ts'
+import { atHome, POLL_MS, SETTLE_TIMEOUT_MS, type App } from './driver.ts'
 import { startScenario, type Scenario } from './harness.ts'
 import type { FakeRomm } from './server.ts'
 
@@ -759,6 +759,71 @@ describe('searching the library', () => {
       await app.read<string>(`document.querySelector('.field__input')?.value`),
       '',
       'the box should have been emptied'
+    )
+  })
+})
+
+describe('coming back from a game', () => {
+  test('the library hands the highlight back to the card it was opened from', async () => {
+    // A card that is not the first, which is where a grid drawn afresh puts
+    // the highlight anyway. See `LibraryView.romId`.
+    await app.goTo('library')
+    await app.waitFor(`document.querySelector('[data-rom="4"]')`, 'the library grid')
+    await app.choose('[data-rom="4"]')
+    await app.waitFor(`document.querySelector('[data-screen="game"]')`, 'the game screen')
+
+    await app.press('Escape')
+    await app.waitFor(
+      `document.querySelector('[data-screen="library"] [data-rom="4"]')?.dataset.focused === 'true'`,
+      'the highlight back on the game that was opened'
+    )
+  })
+
+  test('and so does the home screen, on the shelf it was opened from', async () => {
+    await app.goTo('home')
+    await atHome(app)
+    // The second card of a shelf: the first could be mistaken for the hero's
+    // own game, which is where the highlight starts.
+    const card = `[data-shelf="recent"] [data-rom]:nth-of-type(2)`
+    await app.waitFor(`document.querySelector('${card}')`, 'the recently added shelf')
+    const romId = await app.read<string>(`document.querySelector('${card}').dataset.rom`)
+    await app.choose(card)
+    await app.waitFor(`document.querySelector('[data-screen="game"]')`, 'the game screen')
+
+    await app.press('Escape')
+    await app.waitFor(
+      `document.querySelector('[data-shelf="recent"] [data-rom="${romId}"]')?.dataset.focused === 'true'`,
+      'the highlight back on the card that was opened'
+    )
+  })
+
+  test('and so does a collection', async () => {
+    await app.goTo('collections')
+    await app.choose('[data-collection="10"]')
+    await app.waitFor(`document.querySelector('[data-rom="2"]')`, 'the games on the shelf')
+    await app.choose('[data-rom="2"]')
+    await app.waitFor(`document.querySelector('[data-screen="game"]')`, 'the game screen')
+
+    await app.press('Escape')
+    await app.waitFor(
+      `document.querySelector('[data-rom="2"]')?.dataset.focused === 'true'`,
+      'the highlight back on the game that was opened'
+    )
+  })
+
+  test('and the collections screen, with the lid it was behind still open', async () => {
+    // A derived shelf, so the lid that is shut on a fresh visit has to have
+    // been carried back as well. See `CollectionsView`.
+    const derived = server.virtualCollections[0]
+    await app.goTo('collections')
+    await app.choose('.group__header[data-open="false"]')
+    await app.choose(`[data-collection="${derived.id}"]`)
+    await app.waitFor(`document.querySelector('[data-rom]')`, 'the games on the derived shelf')
+
+    await app.press('Escape')
+    await app.waitFor(
+      `document.querySelector('[data-collection="${derived.id}"]')?.dataset.focused === 'true'`,
+      'the highlight back on the collection that was opened'
     )
   })
 })

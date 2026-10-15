@@ -104,6 +104,7 @@ interface Props {
   query: RomQuery
   enabled: boolean | null
   forget: boolean
+  initialCount?: number
 }
 
 /** A mounted grid, and the handles a test drives it by. */
@@ -132,9 +133,10 @@ function open(props: Partial<Props> = {}): Screen {
     errors.push(message)
   }
 
-  function Grid({ query, enabled, forget }: Props): null {
+  function Grid({ query, enabled, forget, initialCount }: Props): null {
     const pages = useRomPages(query, {
       pageSize: PAGE,
+      initialCount,
       enabled,
       forgetOnStandDown: forget,
       onError
@@ -153,7 +155,8 @@ function open(props: Partial<Props> = {}): Screen {
       // `in` rather than a fallback, because `null` is one of the three
       // answers `enabled` can carry and not an absent one.
       enabled: 'enabled' in props ? (props.enabled ?? null) : true,
-      forget: props.forget ?? false
+      forget: props.forget ?? false,
+      initialCount: props.initialCount
     })
     useEffect(() => {
       again = setCurrent
@@ -262,6 +265,51 @@ describe('paging a query', () => {
 
     // Replaced rather than appended: a first page is the whole of what is held.
     assert.deepEqual(held(screen), [9])
+  })
+})
+
+describe('a grid drawn again on the way back to it', () => {
+  test('asks for as many as it held, in one request', async () => {
+    const screen = open({ initialCount: 5 })
+
+    assert.equal(screen.calls[0].query.limit, 5)
+    await screen.calls[0].answer([1, 2, 3, 4, 5])
+
+    assert.deepEqual(held(screen), [1, 2, 3, 4, 5])
+    assert.equal(screen.pages().more, true)
+  })
+
+  test('and pages on from there one page at a time', async () => {
+    const screen = open({ initialCount: 5 })
+    await screen.calls[0].answer([1, 2, 3, 4, 5])
+
+    await press(() => screen.pages().loadMore())
+
+    assert.deepEqual(screen.calls[1].query, { limit: PAGE, offset: 5 })
+  })
+
+  test('and never asks for less than a page', async () => {
+    const screen = open({ initialCount: 1 })
+
+    assert.equal(screen.calls[0].query.limit, PAGE)
+  })
+
+  test('and a query changed after that starts at one page', async () => {
+    const screen = open({ query: { search_term: 'cave' }, initialCount: 5 })
+    await screen.calls[0].answer([1, 2, 3, 4, 5])
+
+    await screen.redraw({ query: { search_term: 'tobu' } })
+
+    assert.equal(screen.calls[1].query.limit, PAGE)
+  })
+
+  test('and nothing is spent before there is anything to ask', async () => {
+    const screen = open({ enabled: null, initialCount: 5 })
+    assert.equal(screen.calls.length, 0)
+
+    await screen.redraw({ enabled: true })
+
+    assert.equal(screen.calls[0].query.limit, 5)
   })
 })
 

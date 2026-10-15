@@ -384,15 +384,17 @@ function DownloadsNavItem({ active }: { active: boolean }): JSX.Element {
 function Screen({ route }: { route: Route }): JSX.Element {
   switch (route.name) {
     case 'home':
-      return <HomeScreen />
+      return <HomeScreen view={route.view} />
     case 'library':
       return <LibraryScreen view={route.view} />
     case 'game':
       return <GameScreen romId={route.romId} fromVersions={route.fromVersions} />
     case 'collections':
-      return <CollectionsScreen />
+      return <CollectionsScreen view={route.view} />
     case 'collection':
-      return <CollectionScreen collectionId={route.collectionId} title={route.title} />
+      return (
+        <CollectionScreen collectionId={route.collectionId} title={route.title} view={route.view} />
+      )
     case 'downloads':
       return <DownloadsScreen />
     case 'bios':

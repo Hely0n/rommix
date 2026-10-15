@@ -72,6 +72,19 @@ export function LibraryScreen({ view }: { view?: LibraryView }): JSX.Element {
   const [selectedPlatform, setSelectedPlatform] = useState<number | undefined>(view?.platformId)
   const [search, setSearch] = useState(view?.search ?? '')
   /**
+   * The card a return lands on, until a filter is touched.
+   *
+   * Dropped then rather than left to match: a card filtered out and back in is
+   * mounted afresh, and would take the highlight off the search box mid-word.
+   */
+  const [returnTo, setReturnTo] = useState(view?.romId)
+  const refilter =
+    <T,>(set: (value: T) => void) =>
+    (value: T): void => {
+      setReturnTo(undefined)
+      set(value)
+    }
+  /**
    * Seeded from the route as well, so a return lands on the filtered grid.
    *
    * Starting this empty would ask the server for the whole library first and
@@ -100,7 +113,11 @@ export function LibraryScreen({ view }: { view?: LibraryView }): JSX.Element {
       // their collection. Which versions there are is on the game's own page.
       group_by_meta_id: true
     },
-    { enabled: offline === false && scope === 'all', onError: setError }
+    {
+      enabled: offline === false && scope === 'all',
+      initialCount: view?.held,
+      onError: setError
+    }
   )
 
   /**
@@ -282,7 +299,7 @@ export function LibraryScreen({ view }: { view?: LibraryView }): JSX.Element {
             <span className="filter__label">{t('library.scopeLabel')}</span>
             <SegmentedControl<Scope>
               value={scope}
-              onChange={setScope}
+              onChange={refilter(setScope)}
               options={[
                 { value: 'all', label: t('library.scopeAll') },
                 { value: 'downloaded', label: t('library.scopeDownloaded') }
@@ -296,7 +313,7 @@ export function LibraryScreen({ view }: { view?: LibraryView }): JSX.Element {
             focusId={SEARCH_FIELD}
             label={t('library.searchLabel')}
             value={search}
-            onChange={setSearch}
+            onChange={refilter(setSearch)}
             placeholder={t('library.searchPlaceholder')}
             hint={t('library.searchHint', { key: keyLabel('Y') })}
           />
@@ -309,7 +326,7 @@ export function LibraryScreen({ view }: { view?: LibraryView }): JSX.Element {
               id="all"
               label={t('library.allPlatforms')}
               active={selectedPlatform === undefined}
-              onSelect={() => setSelectedPlatform(undefined)}
+              onSelect={() => refilter(setSelectedPlatform)(undefined)}
             />
             {platforms.map((platform) => {
               const matching = countFor(platform)
@@ -333,7 +350,7 @@ export function LibraryScreen({ view }: { view?: LibraryView }): JSX.Element {
                     <PlatformIcon slug={platform.slug} size={20} label={platform.display_name} />
                   }
                   active={platform.id === selectedPlatform}
-                  onSelect={() => setSelectedPlatform(platform.id)}
+                  onSelect={() => refilter(setSelectedPlatform)(platform.id)}
                 />
               )
             })}
@@ -350,17 +367,25 @@ export function LibraryScreen({ view }: { view?: LibraryView }): JSX.Element {
             tile={tile}
             installed={tileInstalled(tile, installedIds)}
             onSelect={() => {
-              // What was filtered for goes onto this screen's own step first,
-              // so B off the game comes back to the grid it was picked out of.
+              // What was filtered for, and the card pressed, go onto this
+              // screen's own step first, so B off the game comes back to the
+              // grid it was picked out of with the highlight where it was.
               // Written here rather than as the filters change, which would
               // redraw the shell around a screen for a keystroke in it.
               revise({
                 name: 'library',
-                view: { scope: chosenScope, search, platformId: selectedPlatform }
+                view: {
+                  scope: chosenScope,
+                  search,
+                  platformId: selectedPlatform,
+                  romId: tile.romId,
+                  held: tiles.length
+                }
               })
               navigate({ name: 'game', romId: romToOpen(tile, installedIds) })
             }}
             showPlatform={selectedPlatform === undefined}
+            autoFocus={tile.romId === returnTo}
           />
         ))}
       </div>

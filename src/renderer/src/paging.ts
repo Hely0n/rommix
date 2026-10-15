@@ -76,6 +76,7 @@ export function useRomPages(
   query: RomQuery,
   {
     pageSize,
+    initialCount = 0,
     enabled = true,
     forgetOnStandDown = false,
     onError
@@ -104,6 +105,16 @@ export function useRomPages(
     forgetOnStandDown?: boolean
     pageSize: number
     /**
+     * How many to ask for in the first request, where that is more than a page.
+     *
+     * For a grid drawn again on the way back to it: the card the player left
+     * can be pages down, and walking the pages in one at a time would leave the
+     * highlight with nowhere to land until they had all arrived. Spent by the
+     * first request that goes out; a query changed after that starts at one
+     * page like any other.
+     */
+    initialCount?: number
+    /**
      * Where a failed page is reported, and where it is cleared on the way into
      * every request — so a grid that failed and then succeeded does not keep
      * the old message. The screens draw one notice for everything that can go
@@ -131,6 +142,8 @@ export function useRomPages(
    * disowns whatever is still out.
    */
   const run = useRef(0)
+  /** See `initialCount`. Zero once the first request has gone. */
+  const firstCount = useRef(initialCount)
 
   /**
    * The same query, with an identity that only changes when the query does.
@@ -179,8 +192,10 @@ export function useRomPages(
       const mine = ++run.current
       setLoading(true)
       onError(null)
+      const limit = offset === 0 ? Math.max(pageSize, firstCount.current) : pageSize
+      firstCount.current = 0
       try {
-        const page = await window.rommix.library.roms({ ...asked, limit: pageSize, offset })
+        const page = await window.rommix.library.roms({ ...asked, limit, offset })
         if (mine !== run.current) return
         setTotal(page.total)
         setMore(hasMorePages(page))
@@ -227,10 +242,13 @@ export function usePagedRoms(
   query: RomQuery,
   {
     enabled = true,
+    initialCount,
     onError
   }: {
     /** See `useRomPages`. */
     enabled?: boolean
+    /** See `useRomPages`. */
+    initialCount?: number
     /** See `useRomPages`. */
     onError: (message: string | null) => void
   }
@@ -238,6 +256,7 @@ export function usePagedRoms(
   const sentinel = useRef<HTMLDivElement | null>(null)
   const { roms, total, more, loading, loadMore } = useRomPages(query, {
     pageSize: PAGE_SIZE,
+    initialCount,
     enabled,
     onError
   })
