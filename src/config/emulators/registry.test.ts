@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import { isKnownSystem } from '../systems.ts'
+import { coreForSystem, isKnownSystem, systemsWithCore } from '../systems.ts'
 import {
   EMULATORS,
   EMUDECK_LAUNCHERS,
@@ -18,7 +18,7 @@ import {
   supportsSystem
 } from './index.ts'
 import { eden } from './eden/index.ts'
-import { emudeck, ROM_PLACEHOLDER } from './emudeck/index.ts'
+import { emudeck, emuDeckCore, ROM_PLACEHOLDER } from './emudeck/index.ts'
 import { retroarch } from './retroarch/index.ts'
 import { retrodeck } from './retrodeck/index.ts'
 import { shadps4 } from './shadps4/index.ts'
@@ -548,6 +548,126 @@ test('every EmuDeck launcher names a real script and consumes the ROM', () => {
       )
     }
   }
+})
+
+/**
+ * The libretro cores EmuDeck downloads, transcribed from `RAcores` in
+ * `RetroArch_installCores` (functions/EmuScripts/emuDeckRetroArch.sh).
+ *
+ * A row loading a core outside this list launches into an error, and a core
+ * in it with no row leaves its systems to standalone RetroArch — whose game
+ * folder is RomMix's own, so per-emulator storage stops meaning anything.
+ */
+const EMUDECK_CORES = new Set([
+  '81',
+  'a5200',
+  'arduous',
+  'atari800',
+  'blastem',
+  'bluemsx',
+  'bsnes_hd_beta',
+  'bsnes',
+  'cap32',
+  'chailove',
+  'citra',
+  'desmume',
+  'dosbox_core',
+  'dosbox_pure',
+  'easyrpg',
+  'fbalpha2012',
+  'fbneo',
+  'flycast',
+  'freechaf',
+  'freeintv',
+  'fuse',
+  'gambatte',
+  'gearboy',
+  'gearsystem',
+  'genesis_plus_gx',
+  'genesis_plus_gx_wide',
+  'gw',
+  'handy',
+  'hatari',
+  'kronos',
+  'lutro',
+  'mame2003_plus',
+  'mame',
+  'mednafen_lynx',
+  'mednafen_ngp',
+  'mednafen_pce_fast',
+  'mednafen_pce',
+  'mednafen_pcfx',
+  'mednafen_psx_hw',
+  'mednafen_saturn',
+  'mednafen_supergrafx',
+  'mednafen_vb',
+  'mednafen_wswan',
+  'melonds',
+  'melondsds',
+  'mesen',
+  'mesen-s',
+  'mgba',
+  'minivmac',
+  'mu',
+  'mupen64plus_next',
+  'neocd',
+  'nestopia',
+  'np2kai',
+  'nxengine',
+  'o2em',
+  'opera',
+  'picodrive',
+  'pokemini',
+  'potator',
+  'ppsspp',
+  'prboom',
+  'prosystem',
+  'puae',
+  'px68k',
+  'quasi88',
+  'retro8',
+  'same_cdi',
+  'sameboy',
+  'sameduck',
+  'scummvm',
+  'snes9x',
+  'squirreljme',
+  'stella',
+  'swanstation',
+  'theodore',
+  'tic80',
+  'tyrquake',
+  'uzem',
+  'vbam',
+  'vecx',
+  'vice_x128',
+  'vice_x64sc',
+  'vice_xscpu64',
+  'vice_xvic',
+  'virtualjaguar',
+  'vitaquake2',
+  'vitaquake2-rogue',
+  'vitaquake2-xatrix',
+  'vitaquake2-zaero',
+  'vitaquake3',
+  'wasm4',
+  'x1'
+])
+
+test('every core an EmuDeck row loads is one EmuDeck installs', () => {
+  for (const [system, options] of Object.entries(EMUDECK_LAUNCHERS)) {
+    for (const option of options) {
+      const core = emuDeckCore(option)
+      if (core) assert.ok(EMUDECK_CORES.has(core), `${system}: EmuDeck does not install ${core}`)
+    }
+  }
+})
+
+test('every system whose core EmuDeck installs has an EmuDeck row', () => {
+  const missing = systemsWithCore().filter(
+    (system) => EMUDECK_CORES.has(coreForSystem(system) ?? '') && !EMUDECK_LAUNCHERS[system]
+  )
+  assert.deepEqual(missing, [])
 })
 
 test('a scripts install builds its launcher path from the install ref', () => {

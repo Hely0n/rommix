@@ -113,6 +113,8 @@ export const EMUDECK_LAUNCHERS: Readonly<Record<string, readonly EmuDeckLauncher
   snesna: [core('snes9x', 'Snes9x', 'snes9x')],
   sfc: [core('snes9x', 'Snes9x', 'snes9x')],
   sgb: [core('mesen-s', 'Mesen-S', 'mesen-s')],
+  satellaview: [core('snes9x', 'Snes9x', 'snes9x')],
+  sufami: [core('snes9x', 'Snes9x', 'snes9x')],
   n64: [
     core('mupen64plus_next', 'Mupen64Plus-Next', 'mupen64plus_next'),
     standalone('rmg', "Rosalie's Mupen GUI", 'rosaliesmupengui.sh', [
@@ -122,6 +124,7 @@ export const EMUDECK_LAUNCHERS: Readonly<Record<string, readonly EmuDeckLauncher
       ROM_PLACEHOLDER
     ])
   ],
+  n64dd: [core('mupen64plus_next', 'Mupen64Plus-Next', 'mupen64plus_next')],
   gc: [standalone('dolphin', 'Dolphin', 'dolphin-emu.sh', ['-b', '-e', ROM_PLACEHOLDER])],
   wii: [standalone('dolphin', 'Dolphin', 'dolphin-emu.sh', ['-b', '-e', ROM_PLACEHOLDER])],
   wiiu: [standalone('cemu', 'Cemu', 'cemu.sh', ['-f', '-g', ROM_PLACEHOLDER])],
@@ -153,19 +156,25 @@ export const EMUDECK_LAUNCHERS: Readonly<Record<string, readonly EmuDeckLauncher
     standalone('citra', 'Citra', 'citra.sh')
   ],
   virtualboy: [core('mednafen_vb', 'Beetle VB', 'mednafen_vb')],
+  pokemini: [core('pokemini', 'PokeMini', 'pokemini')],
+  gameandwatch: [core('gw', 'Game & Watch', 'gw')],
 
   // -- Sega -----------------------------------------------------------------
   mastersystem: [core('genesis_plus_gx', 'Genesis Plus GX', 'genesis_plus_gx')],
   genesis: [core('genesis_plus_gx', 'Genesis Plus GX', 'genesis_plus_gx')],
   megadrive: [core('genesis_plus_gx', 'Genesis Plus GX', 'genesis_plus_gx')],
+  megadrivejp: [core('genesis_plus_gx', 'Genesis Plus GX', 'genesis_plus_gx')],
   segacd: [core('genesis_plus_gx', 'Genesis Plus GX', 'genesis_plus_gx')],
   megacd: [core('genesis_plus_gx', 'Genesis Plus GX', 'genesis_plus_gx')],
+  megacdjp: [core('genesis_plus_gx', 'Genesis Plus GX', 'genesis_plus_gx')],
   gamegear: [core('genesis_plus_gx', 'Genesis Plus GX', 'genesis_plus_gx')],
+  'sg-1000': [core('genesis_plus_gx', 'Genesis Plus GX', 'genesis_plus_gx')],
   sega32x: [core('picodrive', 'PicoDrive', 'picodrive')],
+  sega32xjp: [core('picodrive', 'PicoDrive', 'picodrive')],
+  sega32xna: [core('picodrive', 'PicoDrive', 'picodrive')],
   saturn: [
     core('kronos', 'Kronos', 'kronos'),
-    core('mednafen_saturn', 'Beetle Saturn', 'mednafen_saturn'),
-    core('yabause', 'Yabause', 'yabause')
+    core('mednafen_saturn', 'Beetle Saturn', 'mednafen_saturn')
   ],
   dreamcast: [
     core('flycast', 'Flycast', 'flycast'),
@@ -209,7 +218,9 @@ export const EMUDECK_LAUNCHERS: Readonly<Record<string, readonly EmuDeckLauncher
   tg16: [core('mednafen_pce', 'Beetle PCE', 'mednafen_pce')],
   pcenginecd: [core('mednafen_pce', 'Beetle PCE', 'mednafen_pce')],
   'tg-cd': [core('mednafen_pce', 'Beetle PCE', 'mednafen_pce')],
+  supergrafx: [core('mednafen_supergrafx', 'Beetle SuperGrafx', 'mednafen_supergrafx')],
   pcfx: [core('mednafen_pcfx', 'Beetle PC-FX', 'mednafen_pcfx')],
+  pc88: [core('quasi88', 'QUASI88', 'quasi88')],
   pc98: [core('np2kai', 'NP2kai', 'np2kai')],
 
   // -- SNK ------------------------------------------------------------------
@@ -220,6 +231,10 @@ export const EMUDECK_LAUNCHERS: Readonly<Record<string, readonly EmuDeckLauncher
 
   // -- Atari ----------------------------------------------------------------
   atari2600: [core('stella', 'Stella', 'stella')],
+  atari5200: [core('a5200', 'a5200', 'a5200')],
+  atari7800: [core('prosystem', 'ProSystem', 'prosystem')],
+  atari800: [core('atari800', 'Atari800', 'atari800')],
+  atarist: [core('hatari', 'Hatari', 'hatari')],
   atarilynx: [core('mednafen_lynx', 'Beetle Lynx', 'mednafen_lynx')],
   atarijaguar: [
     core('virtualjaguar', 'Virtual Jaguar', 'virtualjaguar'),
@@ -231,16 +246,27 @@ export const EMUDECK_LAUNCHERS: Readonly<Record<string, readonly EmuDeckLauncher
   amiga600: [core('puae', 'PUAE', 'puae')],
   amiga1200: [core('puae', 'PUAE', 'puae')],
   amigacd32: [core('puae', 'PUAE', 'puae')],
-  c64: [core('vice_x64', 'VICE x64', 'vice_x64')],
+  c64: [core('vice_x64sc', 'VICE x64sc', 'vice_x64sc')],
   vic20: [core('vice_xvic', 'VICE xVIC', 'vice_xvic')],
-  plus4: [core('vice_xplus4', 'VICE xPlus4', 'vice_xplus4')],
   amstradcpc: [core('cap32', 'Caprice32', 'cap32')],
   zxspectrum: [core('fuse', 'Fuse', 'fuse')],
+  zx81: [core('81', 'EightyOne', '81')],
+  msx: [core('bluemsx', 'blueMSX', 'bluemsx')],
+  msx2: [core('bluemsx', 'blueMSX', 'bluemsx')],
+  macintosh: [core('minivmac', 'Mini vMac', 'minivmac')],
+  x1: [core('x1', 'X Millennium', 'x1')],
+  moto: [core('theodore', 'Theodore', 'theodore')],
   x68000: [core('px68k', 'PX68k', 'px68k')],
 
   // -- Other ----------------------------------------------------------------
   '3do': [core('opera', 'Opera', 'opera')],
   intellivision: [core('freeintv', 'FreeIntv', 'freeintv')],
+  colecovision: [core('bluemsx', 'blueMSX', 'bluemsx')],
+  vectrex: [core('vecx', 'VecX', 'vecx')],
+  odyssey2: [core('o2em', 'O2EM', 'o2em')],
+  channelf: [core('freechaf', 'FreeChaF', 'freechaf')],
+  supervision: [core('potator', 'Potator', 'potator')],
+  megaduck: [core('sameduck', 'SameDuck', 'sameduck')],
   cdimono1: [core('same_cdi', 'SAME CDi', 'same_cdi')],
   wonderswan: [core('mednafen_wswan', 'Beetle WonderSwan', 'mednafen_wswan')],
   wonderswancolor: [core('mednafen_wswan', 'Beetle WonderSwan', 'mednafen_wswan')],
@@ -253,12 +279,16 @@ export const EMUDECK_LAUNCHERS: Readonly<Record<string, readonly EmuDeckLauncher
 
   // -- Engines and fantasy consoles -----------------------------------------
   doom: [core('prboom', 'PrBoom', 'prboom')],
+  quake: [core('tyrquake', 'TyrQuake', 'tyrquake')],
+  j2me: [core('squirreljme', 'SquirrelJME', 'squirreljme')],
   scummvm: [
     standalone('scummvm', 'ScummVM', 'scummvm.sh', [`--path=${ROM_PLACEHOLDER}`, '--auto-detect'])
   ],
   easyrpg: [core('easyrpg', 'EasyRPG', 'easyrpg')],
   pico8: [core('retro8', 'Retro8', 'retro8')],
-  tic80: [core('tic80', 'TIC-80', 'tic80')]
+  tic80: [core('tic80', 'TIC-80', 'tic80')],
+  uzebox: [core('uzem', 'Uzem', 'uzem')],
+  wasm4: [core('wasm4', 'WASM-4', 'wasm4')]
 }
 
 /**

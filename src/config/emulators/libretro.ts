@@ -204,6 +204,7 @@ const CORE_LIBRARY_NAMES: Readonly<Record<string, string>> = {
   uzem: 'Uzem',
   vecx: 'VecX',
   vice_x64: 'VICE x64',
+  vice_x64sc: 'VICE x64sc',
   vice_xplus4: 'VICE xplus4',
   vice_xvic: 'VICE xvic',
   virtualjaguar: 'Virtual Jaguar',

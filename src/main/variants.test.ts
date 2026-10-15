@@ -61,11 +61,7 @@ test('a system whose launchers are all missing offers nothing', () => {
 
 test('libretro entries ride on the one retroarch launcher', () => {
   const install = launchers('retroarch.sh')
-  assert.deepEqual(ids(usableVariants(emudeck, 'saturn', install)), [
-    'kronos',
-    'mednafen_saturn',
-    'yabause'
-  ])
+  assert.deepEqual(ids(usableVariants(emudeck, 'saturn', install)), ['kronos', 'mednafen_saturn'])
   // Same directory, but n3ds is standalone-only and none of its scripts are here.
   assert.deepEqual(usableVariants(emudeck, 'n3ds', install), [])
 })
