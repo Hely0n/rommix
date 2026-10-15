@@ -87,7 +87,12 @@ const devicesAsked = (method: string): number =>
 async function aSaveWaitingToGoUp(content: string): Promise<void> {
   await app.goTo('library')
   await app.choose('[data-rom="1"]')
-  await app.waitFor(`document.querySelector('[data-screen="game"]')`, 'the game screen')
+  // The button rather than the screen: the route changes before the game has
+  // loaded, and a page still spinning has neither button to read.
+  await app.waitFor(
+    `document.querySelector('[data-action="download"], [data-action="play"]')`,
+    'the game screen'
+  )
   if (await app.read<boolean>(`Boolean(document.querySelector('[data-action="download"]'))`)) {
     await app.choose('[data-action="download"]')
     await app.waitFor(
