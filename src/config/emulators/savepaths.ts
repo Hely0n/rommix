@@ -29,11 +29,15 @@ import type { Text } from '@shared/i18n'
  *                 id or game id, as Eden, PPSSPP and RPCS3 keep it. Synced as
  *                 one archive, because the individual files inside carry no
  *                 name that ties them to a ROM.
+ *  - `file`       one file whose name the descriptor worked out, because the
+ *                 emulator does not name it after the ROM — Flycast's per-game
+ *                 VMU, named after the disc's product number. Matched, and
+ *                 written, by that name alone.
  *  - `shared`     one memory card, NAND or nvram shared by every game. There is
  *                 nothing here that can honestly be attributed to this ROM, so
  *                 it is skipped rather than uploaded under this game's id.
  */
-export type SaveMatch = 'rom-stem' | 'directory' | 'shared'
+export type SaveMatch = 'rom-stem' | 'directory' | 'file' | 'shared'
 
 /** One directory an emulator reads and writes save data in. */
 export interface SaveLocation {
@@ -54,6 +58,8 @@ export interface SaveLocation {
    */
   search?: readonly string[]
   match: SaveMatch
+  /** The file under `dir` that is this game's save, for a `file` location. */
+  fileName?: string
 }
 
 /** Everything a descriptor can say about one game's save data. */
@@ -234,6 +240,11 @@ export function shared(dir: string): SaveLocation {
 /** A location whose whole directory is this game's save data. */
 export function directory(dir: string): SaveLocation {
   return { dir, match: 'directory' }
+}
+
+/** A location holding one file of this game's, known by name rather than by the ROM. */
+export function named(dir: string, fileName: string): SaveLocation {
+  return { dir, match: 'file', fileName }
 }
 
 /** A location holding files named after the ROM. */

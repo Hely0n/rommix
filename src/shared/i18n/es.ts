@@ -598,6 +598,10 @@ export const es: Catalog = {
     'RetroDECK da a PCSX2 una sola tarjeta de memoria compartida por todos los juegos de PS2, así que no hay ninguna partida guardada que pertenezca a este. Los estados guardados sí se sincronizan.',
   'saves.retrodeckDuckstation':
     'RetroDECK da a DuckStation una sola tarjeta de memoria compartida por todos los juegos de PS1, así que no hay ninguna partida guardada que pertenezca a este. Los estados guardados sí se sincronizan.',
+  'saves.flycastSharedVmu':
+    'Flycast usa una sola VMU compartida por todos los juegos de Dreamcast, así que no hay ninguna partida guardada que pertenezca a este. Activa las VMU por juego en sus opciones del núcleo para sincronizarla. Los estados guardados sí se sincronizan.',
+  'saves.flycastProductNumber':
+    'Flycast nombra la VMU de este juego según el número de producto del disco, que RomMix solo puede leer de una imagen .cue o .gdi. Los estados guardados sí se sincronizan.',
   'saves.pcsx2':
     'PCSX2 mantiene una sola tarjeta de memoria compartida por todos los juegos de PS2, así que no hay ninguna partida guardada que pertenezca a este. Los estados guardados sí se sincronizan.',
   'saves.dolphin':

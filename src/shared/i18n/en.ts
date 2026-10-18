@@ -606,6 +606,10 @@ export const en = {
     'RetroDECK gives PCSX2 one memory card shared by every PS2 game, so there is no save file that belongs to this one. Save states are synced.',
   'saves.retrodeckDuckstation':
     'RetroDECK gives DuckStation one memory card shared by every PS1 game, so there is no save file that belongs to this one. Save states are synced.',
+  'saves.flycastSharedVmu':
+    'Flycast is set to one VMU shared by every Dreamcast game, so there is no save file that belongs to this one. Turn on Per-Game VMUs in its core options to sync it. Save states are synced.',
+  'saves.flycastProductNumber':
+    "Flycast names this game's VMU after the disc's product number, which RomMix can only read from a .cue or .gdi image. Save states are synced.",
   'saves.pcsx2':
     'PCSX2 keeps one memory card shared by every PS2 game, so there is no save file that belongs to this one. Save states are synced.',
   'saves.dolphin':

@@ -299,7 +299,7 @@ export class SaveSync {
    * state and for a directory save carried as an archive; `pullKind` says why.
    */
   private tagDecides(kind: 'save' | 'state', location: SaveLocation): boolean {
-    return !(kind === 'save' && location.match === 'rom-stem')
+    return !(kind === 'save' && (location.match === 'rom-stem' || location.match === 'file'))
   }
 
   /** The tag this device uploads under — see `localTag` in `savefiles.ts`. */
@@ -358,6 +358,19 @@ export class SaveSync {
           isDirectory: true
         }
       ]
+    }
+
+    // A named file is this game's whatever its extension, and nothing else is.
+    if (location.match === 'file' && location.fileName) {
+      const path = join(location.dir, location.fileName)
+      let info
+      try {
+        info = await stat(path)
+      } catch {
+        return []
+      }
+      if (!info.isFile() || info.mtimeMs <= since) return []
+      return [{ path, fileName: location.fileName, mtimeMs: info.mtimeMs }]
     }
 
     const roots = [location.dir, ...(location.search ?? [])]
@@ -1284,7 +1297,9 @@ export class SaveSync {
        * emulator opens rather than onto it. The game then starts with the save
        * it already had and the pull looks like it did nothing.
        *
-       * A save with no slot has only its name to be known by, and keeps it.
+       * A save with no slot has only its name to be known by, and keeps it —
+       * except where the location names the one file the emulator opens,
+       * which is where every copy belongs.
        */
       /**
        * An archive lands on the folder, which is what it is unpacked over.
@@ -1306,7 +1321,8 @@ export class SaveSync {
         ? location.dir
         : await safeJoin(
             location.dir,
-            slot === null ? item.file_name : `${stem}${extname(item.file_name)}`
+            location.fileName ??
+              (slot === null ? item.file_name : `${stem}${extname(item.file_name)}`)
           )
       if (fresh === null) {
         log.error('saves', `refused a ${kind} name that leaves the save folder`, undefined, {

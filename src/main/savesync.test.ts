@@ -1753,3 +1753,66 @@ describe('pairing on the slot rather than the name', () => {
     assert.equal(byName?.localPath, null)
   })
 })
+
+describe('a Dreamcast VMU Flycast names after the disc', () => {
+  /**
+   * The same device as `setUp`, running a Dreamcast disc through Flycast with
+   * a VMU per game — which Flycast names after the product number in the boot
+   * sector, not after the ROM.
+   */
+  function dreamcast(saves: RommSave[]): ReturnType<typeof setUp> {
+    const machine = setUp({ saves })
+    const home = join(machine.saveDir, '..')
+    const configDir = join(home, 'config-root')
+    mkdirSync(join(configDir, 'retroarch'), { recursive: true })
+    writeFileSync(
+      join(configDir, 'retroarch', 'retroarch.cfg'),
+      `savefile_directory = "${machine.saveDir}"\nglobal_core_options = "true"\n`
+    )
+    writeFileSync(
+      join(configDir, 'retroarch', 'retroarch-core-options.cfg'),
+      'reicast_per_content_vmus = "VMU A1"\n'
+    )
+
+    const disc = join(home, 'roms', 'Racer')
+    mkdirSync(disc, { recursive: true })
+    writeFileSync(
+      join(disc, 'Racer.cue'),
+      'REM HIGH-DENSITY AREA\nFILE "Racer (Track 3).bin" BINARY\n  TRACK 03 MODE1/2352\n'
+    )
+    const ip = 'SEGA SEGAKATANA SEGA ENTERPRISES'.padEnd(0x40, ' ') + 'T23001D 50'
+    writeFileSync(join(disc, 'Racer (Track 3).bin'), Buffer.from('\0'.repeat(16) + ip, 'latin1'))
+
+    machine.target.system = 'dreamcast'
+    machine.target.romPath = join(disc, 'Racer.cue')
+    machine.target.rom = { ...rom, fs_name: 'Racer', fs_name_no_ext: 'Racer' } as RommRom
+    machine.target.emulator = { ...machine.target.emulator, configDir }
+    return machine
+  }
+
+  test('a pull lands on the name Flycast opens, whatever the server calls it', async () => {
+    const { sync, target, saveDir } = dreamcast([
+      save({ file_name: 'Racer [2026-10-17_19-47-52].bin', emulator: 'flycast' })
+    ])
+
+    assert.equal((await sync.pullNow(target)).saves, 1)
+
+    assert.deepEqual(readdirSync(saveDir), ['T23001D_50.A1.bin'])
+  })
+
+  test('the VMU Flycast wrote goes up although it is not named after the ROM', async () => {
+    const { sync, target, saveDir, uploaded } = dreamcast([])
+    const path = join(saveDir, 'T23001D_50.A1.bin')
+    writeFileSync(path, 'played')
+    const when = new Date('2026-08-10T12:00:00.000Z')
+    utimesSync(path, when, when)
+
+    const result = await sync.drain(target, when.getTime() - 1000, { sendUnasked: true })
+
+    assert.equal(result.sent, 1)
+    assert.deepEqual(
+      uploaded.map((file) => file.fileName),
+      ['T23001D_50.A1.bin']
+    )
+  })
+})
