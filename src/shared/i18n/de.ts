@@ -610,10 +610,6 @@ export const de: Catalog = {
     'RetroDECK gibt PCSX2 eine einzige Memory Card für alle PS2-Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
   'saves.retrodeckDuckstation':
     'RetroDECK gibt DuckStation eine einzige Memory Card für alle PS1-Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
-  'saves.flycastSharedVmu':
-    'Flycast nutzt eine einzige VMU für alle Dreamcast-Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Aktivieren Sie VMUs pro Spiel in den Core-Optionen, um sie zu synchronisieren. Savestates werden synchronisiert.',
-  'saves.flycastProductNumber':
-    'Flycast benennt die VMU dieses Spiels nach der Produktnummer der Disc, die RomMix nur aus einem .cue- oder .gdi-Image lesen kann. Savestates werden synchronisiert.',
   'saves.pcsx2':
     'PCSX2 führt eine einzige Memory Card für alle PS2-Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
   'saves.dolphin':
@@ -631,7 +627,7 @@ export const de: Catalog = {
   'saves.xenia':
     'Xenia legt Spielstände unter der Xbox-360-Title-ID ab statt unter dem ROM-Namen, die RomMix diesem Spiel nicht zuordnen kann.',
   'saves.flycast':
-    'Flycast führt zwei VMU-Speicherkarten für alle Dreamcast-Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
+    'Flycast führt VMU-Speicherkarten für alle Dreamcast-Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
   'saves.xemu':
     'Xemu führt eine einzige emulierte Xbox-Festplatte für alle Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel.',
   'saves.xroar':

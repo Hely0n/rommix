@@ -1,5 +1,4 @@
-import { flycastVmu } from './flycast.ts'
-import { baseName, dirName, joinPath, perRom } from './savepaths.ts'
+import { baseName, joinPath, perRom, shared } from './savepaths.ts'
 import type { SaveContext, SaveLocation, SavePaths } from './savepaths.ts'
 import type { RequiredCore } from './types.ts'
 
@@ -45,16 +44,6 @@ export interface LibretroConfig {
   sortSavestatesByContent: boolean
   savefilesInContentDir: boolean
   savestatesInContentDir: boolean
-  /** The directory the config was read from, which core options sit below. */
-  configDir: string | null
-  /** Where firmware goes, from `system_directory`. */
-  systemDir: string | null
-  /** One options file for every core, rather than one per core. */
-  globalCoreOptions: boolean
-  /** Whether a per-game or per-directory options file is consulted first. */
-  gameSpecificOptions: boolean
-  /** The global options file, from `core_options_path`, where one is named. */
-  coreOptionsPath: string | null
   /** Core last loaded, from `libretro_path`, without the `_libretro.so`. */
   activeCore: string | null
   /** The directory cores are loaded from, from `libretro_directory`. */
@@ -77,11 +66,6 @@ const LIBRETRO_DEFAULTS: LibretroConfig = {
   sortSavestatesByContent: false,
   savefilesInContentDir: false,
   savestatesInContentDir: false,
-  configDir: null,
-  systemDir: null,
-  globalCoreOptions: false,
-  gameSpecificOptions: true,
-  coreOptionsPath: null,
   activeCore: null,
   coresDir: null,
   buildbotUrl: null
@@ -93,9 +77,7 @@ const BOOL_KEYS: Readonly<Record<string, keyof LibretroConfig>> = {
   sort_savestates_enable: 'sortSavestatesByCore',
   sort_savestates_by_content_enable: 'sortSavestatesByContent',
   savefiles_in_content_dir: 'savefilesInContentDir',
-  savestates_in_content_dir: 'savestatesInContentDir',
-  global_core_options: 'globalCoreOptions',
-  game_specific_options: 'gameSpecificOptions'
+  savestates_in_content_dir: 'savestatesInContentDir'
 }
 
 /**
@@ -115,7 +97,6 @@ export function readLibretroConfig(
   for (const candidate of candidates) {
     const text = env.text(candidate)
     if (text == null) continue
-    config.configDir = dirName(candidate)
 
     for (const line of text.split('\n')) {
       const match = /^\s*([a-z_]+)\s*=\s*"?([^"\n]*)"?\s*$/.exec(line)
@@ -133,9 +114,6 @@ export function readLibretroConfig(
       if (key === 'savefile_directory') config.savefileDir = expandHome(value, home)
       else if (key === 'savestate_directory') config.savestateDir = expandHome(value, home)
       else if (key === 'libretro_directory') config.coresDir = expandHome(value, home)
-      else if (key === 'system_directory' && value !== 'default') {
-        config.systemDir = expandHome(value, home)
-      } else if (key === 'core_options_path') config.coreOptionsPath = expandHome(value, home)
       else if (key === 'core_updater_buildbot_cores_url' && value) {
         // A trailing slash so a file name can simply be appended. One is
         // normally written, but the setting is user-editable.
@@ -287,47 +265,6 @@ export function libretroCore(
 }
 
 /**
- * The value a core option has for this game, or null where no file sets it.
- *
- * RetroArch's own order: a file for the game, then one for the directory it
- * sits in, then the core's — or the single global file, where every core's
- * options are kept together. The first file that exists is the one RetroArch
- * loads, whole, so a key it lacks has the core's default rather than whatever
- * a later file says.
- */
-export function coreOption(
-  ctx: SaveContext,
-  config: LibretroConfig,
-  core: string,
-  key: string
-): string | null {
-  const library = coreLibraryName(core)
-  if (!config.configDir || !library) return null
-  const folder = joinPath(config.configDir, 'config', library)
-
-  const files = [
-    ...(config.gameSpecificOptions
-      ? [joinPath(folder, `${ctx.romStem}.opt`), joinPath(folder, `${baseName(ctx.romDir)}.opt`)]
-      : []),
-    ...(config.globalCoreOptions ? [] : [joinPath(folder, `${library}.opt`)]),
-    // A missing per-core file falls back to the global one, which is what an
-    // install upgraded from before per-core files existed still has.
-    config.coreOptionsPath ?? joinPath(config.configDir, 'retroarch-core-options.cfg')
-  ]
-
-  for (const file of files) {
-    const text = ctx.env.text(file)
-    if (text == null) continue
-    for (const line of text.split('\n')) {
-      const match = /^\s*([A-Za-z0-9_]+)\s*=\s*"?([^"\n]*)"?\s*$/.exec(line)
-      if (match?.[1] === key) return match[2].trim()
-    }
-    return null
-  }
-  return null
-}
-
-/**
  * Apply the redirect rule above for one kind of save data.
  *
  * `canonical` is where a pull writes and a push looks first; `search` carries
@@ -388,24 +325,28 @@ export function libretroSavePaths(
   fallback: { saves: string | null; states: string | null }
 ): SavePaths {
   const chosen = core ?? config.activeCore
-  const saves = locate(config.savefileDir ?? fallback.saves, ctx, {
-    inContentDir: config.savefilesInContentDir,
-    byContent: config.sortSavefilesByContent,
-    byCore: config.sortSavefilesByCore,
-    core: chosen
-  })
-  // Flycast keeps a Dreamcast game's save on a memory card, which is not a file
-  // named after the ROM — see `flycastVmu`.
-  const vmu =
-    chosen === 'flycast' && ctx.system === 'dreamcast'
-      ? flycastVmu(ctx, saves?.dir ?? null, {
-          perContent: coreOption(ctx, config, chosen, 'reicast_per_content_vmus'),
-          systemDir: config.systemDir ?? ctx.paths.bios
-        })
-      : null
+  /**
+   * A Dreamcast save lives on a VMU, never in a file named after the ROM.
+   *
+   * Asked of the system rather than the core: Flycast is the one libretro core
+   * that runs it, and where the core cannot be read the last one loaded is no
+   * answer. By default one VMU under the system folder holds every game's
+   * saves. Its per-game VMUs are named after the disc's product number, which a
+   * CHD does not give up without decompressing it, so none of them is synced.
+   */
+  const vmu = ctx.system === 'dreamcast'
 
   return {
-    saves: vmu ? vmu.saves : saves,
+    saves: vmu
+      ? ctx.paths.bios
+        ? shared(joinPath(ctx.paths.bios, 'dc'))
+        : null
+      : locate(config.savefileDir ?? fallback.saves, ctx, {
+          inContentDir: config.savefilesInContentDir,
+          byContent: config.sortSavefilesByContent,
+          byCore: config.sortSavefilesByCore,
+          core: chosen
+        }),
     states: locate(config.savestateDir ?? fallback.states, ctx, {
       inContentDir: config.savestatesInContentDir,
       byContent: config.sortSavestatesByContent,
@@ -417,6 +358,6 @@ export function libretroSavePaths(
     // all to what wrote this game's save.
     emulator: core ?? LIBRETRO_TAG,
     alsoAccepts: [LIBRETRO_TAG],
-    ...(vmu?.unsyncableReason ? { unsyncableReason: vmu.unsyncableReason } : {})
+    ...(vmu ? { unsyncableReason: 'saves.flycast' as const } : {})
   }
 }

@@ -451,141 +451,23 @@ test('a RetroDECK core that cannot be read is left as the frontend', () => {
   assert.equal(paths.emulator, 'retroarch')
 })
 
-/** A Racer disc as Redump lays it out, with the boot sector Flycast reads. */
-const RACER_DIR = '/home/deck/retrodeck/roms/dreamcast/Star Wars - Episode I - Racer (Europe)'
-const RACER_CUE = [
-  'REM SINGLE-DENSITY AREA',
-  'FILE "Racer (Track 1).bin" BINARY',
-  '  TRACK 01 MODE1/2352',
-  'FILE "Racer (Track 2).bin" BINARY',
-  '  TRACK 02 AUDIO',
-  'REM HIGH-DENSITY AREA',
-  'FILE "Racer (Track 3).bin" BINARY',
-  '  TRACK 03 MODE1/2352'
-].join('\n')
-
-/** A raw Mode 1 sector holding a boot sector with this product number. */
-function bootSector(product: string): string {
-  const ip = 'SEGA SEGAKATANA SEGA ENTERPRISES0F20 GD-ROM1/1    E     0799A10 '
-  return '\0'.repeat(16) + ip.padEnd(0x40, ' ') + product.padEnd(10, ' ') + 'V1.005'
-}
-
-function dreamcast(options: {
-  romPath: string
-  files?: Record<string, string>
-  heads?: Record<string, string>
-}): SavePaths {
-  return resolve(retrodeck, {
-    romPath: options.romPath,
+test('a Dreamcast VMU is shared by every game and not synced', () => {
+  // A pull named after the ROM would land where Flycast never looks.
+  const paths = resolve(retroarch, {
+    romPath: '/roms/dreamcast/Racer.chd',
     system: 'dreamcast',
-    configDir: '/var/rd/config',
-    paths: {
-      home: '/home/deck/retrodeck',
-      saves: '/home/deck/retrodeck/saves',
-      states: '/home/deck/retrodeck/states',
-      bios: '/home/deck/retrodeck/bios'
-    },
-    env: machine({
-      files: {
-        '/var/rd/config/retroarch/retroarch.cfg': `${RETRODECK_CFG}\nglobal_core_options = "true"`,
-        ...options.files
-      },
-      heads: options.heads
-    })
+    paths: { saves: '/ra/saves', states: '/ra/states', bios: '/ra/system' },
+    env: machine({})
   })
-}
-
-/** RetroDECK's global options file, with Flycast's per-game VMU set to `value`. */
-function flycastOptions(value: string): Record<string, string> {
-  return {
-    '/var/rd/config/retroarch/retroarch-core-options.cfg': `reicast_per_content_vmus = "${value}"`
-  }
-}
-
-test('Flycast with one VMU for every game has nothing to sync per game', () => {
-  // RetroDECK's default. The card is under the system folder, and a save
-  // pulled into the save folder would be one Flycast never opens.
-  const paths = dreamcast({
-    romPath: `${RACER_DIR}/Star Wars - Episode I - Racer (Europe).cue`,
-    files: flycastOptions('disabled')
-  })
-  assert.equal(paths.saves?.match, 'shared')
-  assert.equal(paths.saves?.dir, '/home/deck/retrodeck/bios/dc')
-  assert.equal(paths.unsyncableReason, 'saves.flycastSharedVmu')
+  assert.deepEqual(paths.saves, { dir: '/ra/system/dc', match: 'shared' })
+  assert.equal(paths.unsyncableReason, 'saves.flycast')
   assert.equal(paths.states?.match, 'rom-stem')
-})
 
-test('Flycast names a per-game VMU after the product number on the disc', () => {
-  // The space in the product number is one of the characters Flycast replaces.
-  const paths = dreamcast({
-    romPath: `${RACER_DIR}/Star Wars - Episode I - Racer (Europe).cue`,
-    files: {
-      [`${RACER_DIR}/Star Wars - Episode I - Racer (Europe).cue`]: RACER_CUE,
-      ...flycastOptions('VMU A1')
-    },
-    heads: {
-      [`${RACER_DIR}/Racer (Track 1).bin`]: bootSector('WRONG'),
-      [`${RACER_DIR}/Racer (Track 3).bin`]: bootSector('T23001D 50')
-    }
-  })
-  assert.deepEqual(paths.saves, {
-    dir: '/home/deck/retrodeck/saves/Star Wars - Episode I - Racer (Europe)',
-    match: 'file',
-    fileName: 'T23001D_50.A1.bin'
-  })
-  assert.equal(paths.unsyncableReason, undefined)
-})
-
-test("a game-specific options file decides Flycast's VMU over the global one", () => {
-  const cue = `${RACER_DIR}/Star Wars - Episode I - Racer (Europe).cue`
-  const paths = dreamcast({
-    romPath: cue,
-    files: {
-      [cue]: RACER_CUE,
-      ...flycastOptions('disabled'),
-      '/var/rd/config/retroarch/config/Flycast/Star Wars - Episode I - Racer (Europe).opt':
-        'reicast_per_content_vmus = "All VMUs"'
-    },
-    heads: { [`${RACER_DIR}/Racer (Track 3).bin`]: bootSector('T23001D 50') }
-  })
-  assert.equal(paths.saves?.fileName, 'T23001D_50.A1.bin')
-})
-
-test('a Flycast disc whose product number cannot be read is not synced', () => {
-  // A CHD is compressed, and a track that does not start with a boot sector
-  // would give a name Flycast never writes.
-  const chd = dreamcast({
+  const retroDecked = retroDeck({
     romPath: '/home/deck/retrodeck/roms/dreamcast/Racer.chd',
-    files: flycastOptions('VMU A1')
+    system: 'dreamcast'
   })
-  assert.equal(chd.saves?.match, 'shared')
-  assert.equal(chd.unsyncableReason, 'saves.flycastProductNumber')
-
-  const cue = `${RACER_DIR}/Star Wars - Episode I - Racer (Europe).cue`
-  const garbled = dreamcast({
-    romPath: cue,
-    files: { [cue]: RACER_CUE, ...flycastOptions('VMU A1') },
-    heads: { [`${RACER_DIR}/Racer (Track 3).bin`]: '\0'.repeat(2352) }
-  })
-  assert.equal(garbled.saves?.match, 'shared')
-})
-
-test('a Flycast .gdi boots from its high-density data track', () => {
-  const dir = '/home/deck/retrodeck/roms/dreamcast/Racer'
-  const paths = dreamcast({
-    romPath: `${dir}/disc.gdi`,
-    files: {
-      [`${dir}/disc.gdi`]: [
-        '3',
-        '1 0 4 2352 track01.bin 0',
-        '2 756 0 2352 track02.raw 0',
-        '3 45000 4 2352 track03.bin 0'
-      ].join('\n'),
-      ...flycastOptions('VMU A1')
-    },
-    heads: { [`${dir}/track03.bin`]: bootSector('T23001D 50') }
-  })
-  assert.equal(paths.saves?.fileName, 'T23001D_50.A1.bin')
+  assert.equal(retroDecked.unsyncableReason, 'saves.flycast')
 })
 
 test('RetroDECK standalone components each get their own arrangement', () => {
