@@ -213,6 +213,8 @@ export function useGamepad(
     let holdFired = false
     /** The pad whose axes are read. See `readPads`. */
     let active: number | null = null
+    /** Controls pressed while another window had focus, ignored until released. */
+    const swallowed = new Set<string>()
 
     const edge = (
       key: string,
@@ -228,6 +230,10 @@ export function useGamepad(
       const fire = (): void => {
         if (byButton) noteRef.current('gamepad')
         rawFire()
+      }
+      if (swallowed.has(key)) {
+        if (!pressed) swallowed.delete(key)
+        return
       }
       const now = performance.now()
       const state = held.get(key)
@@ -285,6 +291,23 @@ export function useGamepad(
       }
       holdSince = null
       holdFired = false
+
+      /**
+       * Another window has the focus — under gamescope, the Steam menu or the
+       * quick access menu drawn over RomMix.
+       *
+       * Chromium reads the pads straight from the device, under Steam Input, so
+       * a press that navigates Steam's menu reaches the poll all the same. Every
+       * control held meanwhile stays ignored until it is let go: the press that
+       * closes Steam's menu is still down when the focus comes back, and must
+       * not land in RomMix as well.
+       */
+      if (!document.hasFocus()) {
+        held.clear()
+        for (const control of [...buttons, ...sticks]) swallowed.add(control)
+        frame = requestAnimationFrame(poll)
+        return
+      }
 
       for (const direction of ['up', 'down', 'left', 'right'] as const) {
         const byButton = buttons.has(direction)
