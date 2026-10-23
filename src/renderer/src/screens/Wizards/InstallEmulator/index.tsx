@@ -327,6 +327,8 @@ function VersionPage({
   const { t } = useI18n()
   const [releases, setReleases] = useState<EmulatorRelease[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // The tag of the build already here, so the list can say which one it is.
+  const [installed, setInstalled] = useState<string | null>(null)
 
   useEffect(() => {
     void window.rommix.system
@@ -338,6 +340,14 @@ function VersionPage({
       // Back button and nothing else.
       .then((list) => setReleases(list.filter((release) => release.assets.length > 0)))
       .catch((cause: Error) => setError(cause.message))
+  }, [descriptor.id])
+
+  useEffect(() => {
+    void window.rommix.system
+      .emulatorStates()
+      .then((states) =>
+        setInstalled(states.find((state) => state.id === descriptor.id)?.install?.version ?? null)
+      )
   }, [descriptor.id])
 
   return (
@@ -357,6 +367,7 @@ function VersionPage({
             release={release}
             // The newest is what nearly everybody wants, and it is first.
             latest={index === 0}
+            installed={release.tag === installed}
             onSelect={() => onPick(release)}
             autoFocus={index === 0}
           />

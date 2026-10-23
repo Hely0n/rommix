@@ -4,7 +4,7 @@ import type { RomMixApp } from '../app.ts'
 import { prepareRomFolders } from '../emulators.ts'
 import { installFlatpak } from '../host.ts'
 import { log } from '../log.ts'
-import { builtForThisMachine, fetchReleases, installAsset } from '../releases.ts'
+import { builtForThisMachine, fetchReleases, installAsset, recordRelease } from '../releases.ts'
 import { RommError } from '../romm/index.ts'
 import { t } from '../i18n.ts'
 import type { Handle } from './handler.ts'
@@ -109,10 +109,11 @@ export function registerEmulatorIpc(rommix: RomMixApp, handle: Handle): void {
      * an emulator, and it makes the release source — not the renderer — the
      * authority on all three.
      */
-    const listed = (await fetchReleases(source))
-      .flatMap((release) => release.assets)
-      .find((candidate) => candidate.name === asset.name)
-    if (!listed) {
+    const release = (await fetchReleases(source)).find((candidate) =>
+      candidate.assets.some((listed) => listed.name === asset.name)
+    )
+    const listed = release?.assets.find((candidate) => candidate.name === asset.name)
+    if (!release || !listed) {
       throw new RommError(t('error.assetNotRunnable', { asset: asset.name }))
     }
 
@@ -125,6 +126,7 @@ export function registerEmulatorIpc(rommix: RomMixApp, handle: Handle): void {
     const path = await installAsset(id, listed, (progress) =>
       rommix.send('emulators:progress', progress)
     )
+    await recordRelease(id, release.tag)
     store.updateSettings({
       emulatorPaths: { ...store.settings.emulatorPaths, [id]: path }
     })

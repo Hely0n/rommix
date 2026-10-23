@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { emulatorById, launchVariants, orderedEmulators } from '@config/emulators'
 import type {
   DirBase,
@@ -14,7 +14,7 @@ import type {
 } from '@config/emulators'
 import type { Settings } from '@shared/types'
 import { log } from './log.ts'
-import { managedEmulatorDir } from './releases.ts'
+import { installedRelease, managedEmulatorDir } from './releases.ts'
 import { rootPaths } from './root.ts'
 import { binaryPath, findAppImage, findMatchingFile, flatpakLocation } from './host.ts'
 import { realHome, xdgConfigHome, xdgDataHome } from './xdg.ts'
@@ -386,8 +386,25 @@ export function usableVariants(
 // Detection
 // ---------------------------------------------------------------------------
 
+/**
+ * The install, with the release it came from where RomMix downloaded it.
+ *
+ * By where the program sits rather than by how it was found: a path recorded
+ * in settings and one re-found in the managed directory are the same install.
+ */
+async function withRelease(
+  descriptor: EmulatorDescriptor,
+  install: ResolvedInstall | null
+): Promise<ResolvedInstall | null> {
+  if (install?.kind !== 'appimage' || dirname(install.ref) !== managedEmulatorDir(descriptor.id)) {
+    return install
+  }
+  const version = await installedRelease(descriptor.id)
+  return version ? { ...install, version } : install
+}
+
 async function probe(descriptor: EmulatorDescriptor, settings: Settings): Promise<EmulatorState> {
-  const install = await resolveInstall(descriptor, settings)
+  const install = await withRelease(descriptor, await resolveInstall(descriptor, settings))
   const paths = !install
     ? NO_PATHS
     : descriptor.layout

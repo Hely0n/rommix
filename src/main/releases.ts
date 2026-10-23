@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { chmod, mkdir, readdir, rename, rm } from 'node:fs/promises'
+import { chmod, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises'
 import { basename, join, relative } from 'node:path'
 import { isInstallableAsset, type ReleaseSource } from '@config/emulators'
 import type { EmulatorAsset, EmulatorInstallProgress, EmulatorRelease } from '@shared/types'
@@ -32,6 +32,33 @@ const RELEASE_TIMEOUT_MS = 30_000
 export function managedEmulatorDir(id: string): string {
   // Inside RomMix's own root, so a whole installation is one movable folder.
   return join(rootPaths().emulators, id)
+}
+
+/**
+ * The file beside a downloaded emulator that names the release it came from.
+ *
+ * Inside the managed directory, so it goes wherever the install goes: replaced
+ * along with it by the next `installAsset`, and never left describing a build
+ * that is no longer there.
+ */
+const RELEASE_FILE = 'release.tag'
+
+/** Note which release the emulator in the managed directory was taken from. */
+export async function recordRelease(id: string, tag: string): Promise<void> {
+  await writeFile(join(managedEmulatorDir(id), RELEASE_FILE), tag)
+}
+
+/**
+ * The release the emulator in the managed directory was taken from, or null
+ * where nothing says — an install from before the tag was kept, or one placed
+ * there by hand.
+ */
+export async function installedRelease(id: string): Promise<string | null> {
+  try {
+    return (await readFile(join(managedEmulatorDir(id), RELEASE_FILE), 'utf8')).trim() || null
+  } catch {
+    return null
+  }
 }
 
 /**

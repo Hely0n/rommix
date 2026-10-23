@@ -117,11 +117,14 @@ export function MethodRow({
 export function ReleaseRow({
   release,
   latest,
+  installed,
   onSelect,
   autoFocus
 }: {
   release: EmulatorRelease
   latest: boolean
+  /** The release the build already on this machine came from. */
+  installed: boolean
   onSelect: () => void
   autoFocus: boolean
 }): JSX.Element {
@@ -133,6 +136,7 @@ export function ReleaseRow({
         <>
           {release.name || release.tag}
           {latest ? <StatusPill tone="ok">{t('install.latest')}</StatusPill> : null}
+          {installed ? <StatusPill tone="info">{t('install.installed')}</StatusPill> : null}
           {release.prerelease ? (
             <StatusPill tone="warn">{t('install.prerelease')}</StatusPill>
           ) : null}

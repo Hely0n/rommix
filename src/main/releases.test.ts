@@ -13,7 +13,13 @@ import {
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { ReleaseSource } from '@config/emulators'
-import { fetchReleases, installAsset, managedEmulatorDir } from './releases.ts'
+import {
+  fetchReleases,
+  installAsset,
+  installedRelease,
+  managedEmulatorDir,
+  recordRelease
+} from './releases.ts'
 import { zipDirectory } from './zip.ts'
 
 /**
@@ -207,6 +213,28 @@ describe('installing an asset', () => {
     )
 
     assert.equal(existsSync(older), false)
+  })
+
+  test('the release it came from is read back, and goes with the next install', async () => {
+    scratchRoot()
+    serve(() => new Response('one'))
+    await installAsset(
+      'eden',
+      { name: 'Eden-old.AppImage', url: 'https://git.example/old', sizeBytes: 3, digest: null },
+      () => undefined
+    )
+    await recordRelease('eden', 'v0.4')
+    assert.equal(await installedRelease('eden'), 'v0.4')
+
+    // Replaced before anything records the new one, so it must not still claim
+    // the old tag.
+    serve(() => new Response('two'))
+    await installAsset(
+      'eden',
+      { name: mine, url: 'https://git.example/mine', sizeBytes: 3, digest: null },
+      () => undefined
+    )
+    assert.equal(await installedRelease('eden'), null)
   })
 
   test('a refused download leaves nothing that looks like an emulator', async () => {

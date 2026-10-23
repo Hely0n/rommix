@@ -108,6 +108,11 @@ export interface ResolvedInstall {
    * system and user installs, either architecture, and any branch.
    */
   location?: string
+  /**
+   * The release it was taken from, for a build RomMix downloaded itself. Every
+   * other kind of install is versioned by whatever put it there.
+   */
+  version?: string
 }
 
 /**

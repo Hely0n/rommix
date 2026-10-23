@@ -395,6 +395,7 @@ function EmulatorRow({
                   value={state.install.ref}
                 />
               ) : null}
+              <Path icon="revision" label={t('emulator.version')} value={state?.install?.version} />
             </section>
 
             {/* Where its files are. Absent entirely for an emulator that is not
