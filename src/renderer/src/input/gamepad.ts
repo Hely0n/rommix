@@ -110,6 +110,13 @@ type Control = Direction | 'a' | 'b' | 'x' | 'y' | 'lb' | 'rb' | 'start'
  * plugged in. For the same reason a stick moves the focus but never decides
  * which hints are shown.
  *
+ * Until some pad is active, a stick pushed out of the dead zone makes its pad
+ * the active one, so the stick works before the first press. Crossing the dead
+ * zone is the proof — a resting stick holds still, wherever it rests — and it
+ * counts only then: once a pad is active, a light gun's aim sweeps its axes
+ * through the dead zone whenever it is pointed, and must not take the focus
+ * from the pad in hand.
+ *
  * A pad on its own is active without a press. There is no other pad its axes
  * could be mistaken for, and a pad whose d-pad is a hat must not need a button
  * pressed before the d-pad works.
@@ -119,20 +126,46 @@ export interface PadsState {
   sticks: Set<Direction>
   /** `Gamepad.index` of the active pad, to hand back on the next read. */
   active: number | null
+  /** Each pad's steering axes by `Gamepad.index`, to hand back on the next read. */
+  axes: Map<number, number[]>
 }
 
-export function readPads(pads: readonly (Gamepad | null)[], active: number | null): PadsState {
+/** The axes that steer: the left stick, and the hat on a pad with no mapping. */
+function steeringAxes(pad: Gamepad): number[] {
+  const indices = pad.mapping === 'standard' ? [0, 1] : [0, 1, UNMAPPED.HAT_X, UNMAPPED.HAT_Y]
+  return indices.map((index) => pad.axes[index] ?? 0)
+}
+
+export function readPads(
+  pads: readonly (Gamepad | null)[],
+  active: number | null,
+  previous: ReadonlyMap<number, readonly number[]> = new Map()
+): PadsState {
   const buttons = new Set<Control>()
   const sticks = new Set<Direction>()
+  const axes = new Map<number, number[]>()
 
   const connected = pads.filter((pad): pad is Gamepad => pad !== null)
-  const pressing = (pad: Gamepad): boolean => pad.buttons.some((button) => button.pressed)
-  // The active pad keeps the role while it is in use, so two pads pressed at
-  // once do not trade it back and forth every frame.
+  for (const pad of connected) axes.set(pad.index, steeringAxes(pad))
+  // A pad seen for the first time has nothing to have moved from.
+  const pushed = (pad: Gamepad): boolean => {
+    const before = previous.get(pad.index)
+    const now = axes.get(pad.index) ?? []
+    return (
+      before !== undefined &&
+      now.some(
+        (value, index) =>
+          Math.abs(value) > AXIS_DEADZONE && Math.abs(before[index] ?? 0) <= AXIS_DEADZONE
+      )
+    )
+  }
   const current = connected.find((pad) => pad.index === active)
+  const using = (pad: Gamepad): boolean =>
+    pad.buttons.some((button) => button.pressed) || (current === undefined && pushed(pad))
+  // The active pad keeps the role while it is in use, so two pads used at
+  // once do not trade it back and forth every frame.
   const alone = connected.length === 1 ? connected[0] : undefined
-  const next =
-    current && pressing(current) ? current : (connected.find(pressing) ?? current ?? alone)
+  const next = current && using(current) ? current : (connected.find(using) ?? current ?? alone)
 
   for (const pad of connected) {
     const button = (index: number): boolean => pad.buttons[index]?.pressed ?? false
@@ -167,7 +200,7 @@ export function readPads(pads: readonly (Gamepad | null)[], active: number | nul
     if (axisX > AXIS_DEADZONE) sticks.add('right')
   }
 
-  return { buttons, sticks, active: next?.index ?? null }
+  return { buttons, sticks, active: next?.index ?? null, axes }
 }
 
 /** Delay before a held direction starts repeating, then the repeat period. */
@@ -211,8 +244,9 @@ export function useGamepad(
     /** When Start went down while suspended, and whether the hold has fired. */
     let holdSince: number | null = null
     let holdFired = false
-    /** The pad whose axes are read. See `readPads`. */
+    /** The pad whose axes are read, and every pad's axes last time. See `readPads`. */
     let active: number | null = null
+    let axes = new Map<number, number[]>()
     /** Controls pressed while another window had focus, ignored until released. */
     const swallowed = new Set<string>()
 
@@ -255,8 +289,10 @@ export function useGamepad(
     }
 
     const poll = (): void => {
-      const { buttons, sticks, active: nowActive } = readPads(navigator.getGamepads(), active)
-      active = nowActive
+      const read = readPads(navigator.getGamepads(), active, axes)
+      const { buttons, sticks } = read
+      active = read.active
+      axes = read.axes
 
       /**
        * An emulator owns the screen, so the pads are the emulator's.

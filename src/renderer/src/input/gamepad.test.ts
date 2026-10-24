@@ -67,6 +67,51 @@ describe('the active pad', () => {
     assert.equal(readPads([pad(0, [], [1, 1, 0, 0]), pad(1)], null).active, null)
   })
 
+  test('is the one whose stick is pushed out of the dead zone', () => {
+    // With more than one pad connected, the stick must still work before any
+    // button is pressed.
+    const previous = new Map([
+      [0, [0, 0]],
+      [1, [0, 0]]
+    ])
+    assert.equal(readPads([pad(0), pad(1, [], [0, 0.9, 0, 0])], null, previous).active, 1)
+  })
+
+  test('is not taken from the active pad by a pushed stick', () => {
+    // A light gun's aim is a pair of axes swept whenever it is pointed.
+    const previous = new Map([
+      [0, [0, 0]],
+      [1, [0, 0]]
+    ])
+    assert.equal(readPads([pad(0), pad(1, [], [0.9, 0, 0, 0])], 0, previous).active, 0)
+  })
+
+  test('is not a pad whose stick rests off centre', () => {
+    const previous = new Map([
+      [0, [0.9, 0]],
+      [1, [0, 0]]
+    ])
+    assert.equal(readPads([pad(0, [], [0.9, 0, 0, 0]), pad(1)], null, previous).active, null)
+  })
+
+  test('is not a pad seen off centre for the first time', () => {
+    assert.equal(readPads([pad(0, [], [0.9, 0, 0, 0]), pad(1)], null, new Map()).active, null)
+  })
+
+  test('is the one whose hat is pushed, on a pad with no mapping', () => {
+    const previous = new Map([
+      [0, [0, 0]],
+      [1, [0, 0, 0, 0]]
+    ])
+    const { buttons, active } = readPads(
+      [pad(0), pad(1, [], [0, 0, 0, 0, 0, 0, 0, 1], '')],
+      null,
+      previous
+    )
+    assert.equal(active, 1)
+    assert.deepEqual([...buttons], ['down'])
+  })
+
   test('is a pad on its own, pressed or not', () => {
     // Its d-pad may be a hat, which is axes, and must work from the first push.
     const { buttons, active } = readPads([pad(3, [], [0, 0, 0, 0, 0, 0, 1, 0], '')], null)
