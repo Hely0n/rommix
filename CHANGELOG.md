@@ -4,6 +4,26 @@ Newest first. `npm run release` adds the entry for a version, falling back to th
 commit subjects and ids since the previous tag — so write the section by hand
 before releasing if you want prose instead. See [Releasing](README.md#releasing).
 
+## 0.21.0 — 2026-10-24
+
+- feat: show the installed version of a downloaded emulator (7e82d9b)
+- fix: ignore the pads while the Steam menu has the focus (9c809fd)
+- fix: report Dreamcast saves in RetroArch as unsyncable (e6cf36e)
+- fix: sync the Dreamcast VMU Flycast actually writes (3eacaa5)
+- test(app): wait for the game to load before downloading it (c1725b5)
+- fix: launch the disc image of a PS2 game rather than its cue (15c0930)
+- fix: name the save folder of every core RomMix loads (481f2ab)
+- fix: give EmuDeck a row for every core it installs (b3c8cf7)
+- fix: return the highlight to the card it was opened from (2bbd93d)
+- chore: update the dependencies (cf56f66)
+- feat: drop Xemu for the original Xbox (a82542c)
+- feat: add Xemu for the original Xbox (7d2bf49)
+- feat: add Xenia Canary for the Xbox 360 (f5b25b7)
+- fix: let a lone controller steer before any press (355061f)
+- fix: list every controller in the system check (990e55e)
+- fix: read every connected controller (68697e0)
+- docs: stop requiring a log on the bug form (2b38d66)
+
 ## 0.20.0 — 2026-09-30
 
 - fix: stop the achievements tab blanking the screen (a8e90b1)
