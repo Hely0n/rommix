@@ -68,7 +68,8 @@ const BUTTON = {
   DPAD_UP: 12,
   DPAD_DOWN: 13,
   DPAD_LEFT: 14,
-  DPAD_RIGHT: 15
+  DPAD_RIGHT: 15,
+  GUIDE: 16
 } as const
 
 /**
@@ -82,13 +83,14 @@ const BUTTON = {
  * Linux joystick driver reports them instead.
  *
  * Which is nearly the standard order: A/B/X/Y and the shoulders land in the
- * same places, so only two things need saying here. Start is button 7 rather
- * than 9, and the d-pad is not a set of buttons at all but a hat reported as a
- * pair of axes. Neither exists in a standard-mapped pad — where axes 6 and 7
- * are absent and button 7 is the right trigger — so both are read only when
- * there is no mapping, and holding RT never opens the menu.
+ * same places, so only three things need saying here. Start is button 7 rather
+ * than 9, the guide button is 8 rather than 16, and the d-pad is not a set of
+ * buttons at all but a hat reported as a pair of axes. None of them exists in a
+ * standard-mapped pad — where axes 6 and 7 are absent, button 7 is the right
+ * trigger and button 8 is Back — so they are read only when there is no
+ * mapping, and holding RT never opens the menu.
  */
-const UNMAPPED = { START: 7, HAT_X: 6, HAT_Y: 7 } as const
+const UNMAPPED = { START: 7, GUIDE: 8, HAT_X: 6, HAT_Y: 7 } as const
 
 const AXIS_DEADZONE = 0.55
 
@@ -128,6 +130,8 @@ export interface PadsState {
   active: number | null
   /** Each pad's steering axes by `Gamepad.index`, to hand back on the next read. */
   axes: Map<number, number[]>
+  /** Whether the guide button is held on any pad. Never a control. See `useGamepad`. */
+  guide: boolean
 }
 
 /** The axes that steer: the left stick, and the hat on a pad with no mapping. */
@@ -144,6 +148,7 @@ export function readPads(
   const buttons = new Set<Control>()
   const sticks = new Set<Direction>()
   const axes = new Map<number, number[]>()
+  let guide = false
 
   const connected = pads.filter((pad): pad is Gamepad => pad !== null)
   for (const pad of connected) axes.set(pad.index, steeringAxes(pad))
@@ -191,6 +196,7 @@ export function readPads(
       ['start', button(BUTTON.START) || (!mapped && button(UNMAPPED.START))]
     ]
     for (const [control, down] of pressed) if (down) buttons.add(control)
+    if (button(BUTTON.GUIDE) || (!mapped && button(UNMAPPED.GUIDE))) guide = true
 
     const axisX = axis(0)
     const axisY = axis(1)
@@ -200,7 +206,7 @@ export function readPads(
     if (axisX > AXIS_DEADZONE) sticks.add('right')
   }
 
-  return { buttons, sticks, active: next?.index ?? null, axes }
+  return { buttons, sticks, active: next?.index ?? null, axes, guide }
 }
 
 /** Delay before a held direction starts repeating, then the repeat period. */
@@ -290,7 +296,7 @@ export function useGamepad(
 
     const poll = (): void => {
       const read = readPads(navigator.getGamepads(), active, axes)
-      const { buttons, sticks } = read
+      const { buttons, sticks, guide } = read
       active = read.active
       axes = read.axes
 
@@ -337,8 +343,12 @@ export function useGamepad(
        * control held meanwhile stays ignored until it is let go: the press that
        * closes Steam's menu is still down when the focus comes back, and must
        * not land in RomMix as well.
+       *
+       * The guide button held is the same thing: Steam reads every press made
+       * with it — guide and X for the on-screen keyboard, and the rest of its
+       * chords — and RomMix must not act on them too.
        */
-      if (!document.hasFocus()) {
+      if (!document.hasFocus() || guide) {
         held.clear()
         for (const control of [...buttons, ...sticks]) swallowed.add(control)
         frame = requestAnimationFrame(poll)

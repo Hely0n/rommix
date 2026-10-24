@@ -46,6 +46,18 @@ describe('reading every pad', () => {
   })
 })
 
+describe('the guide button', () => {
+  test('is seen from any pad, and is never a control', () => {
+    const { buttons, guide } = readPads([pad(0), pad(1, [16, 2])], null)
+    assert.ok(guide)
+    assert.deepEqual([...buttons], ['x'])
+  })
+
+  test('on a mapped pad, button 8 is Back, not the guide button', () => {
+    assert.ok(!readPads([pad(0, [8])], null).guide)
+  })
+})
+
 describe('the active pad', () => {
   test('is the one that pressed a button', () => {
     assert.equal(readPads([pad(0), pad(1, [0])], null).active, 1)
@@ -163,6 +175,10 @@ describe('a pad Chromium has no mapping for', () => {
     // something else entirely, held at one end.
     const { buttons } = readPads([pad(0, [], [0, 0, 0, 0, 0, 0, -1, -1], ''), pad(1)], 1)
     assert.equal(buttons.size, 0)
+  })
+
+  test('its guide button is button 8', () => {
+    assert.ok(readPads([pad(0, [8], [0, 0], '')], null).guide)
   })
 
   test('Start is button 7', () => {
