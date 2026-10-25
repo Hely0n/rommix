@@ -89,6 +89,15 @@ export interface FakeRomm {
   }[]
   /** Every request, in order. */
   asked: Asked[]
+  /**
+   * Hold the slow game after its first piece, or let it flow again.
+   *
+   * For a scenario that has to catch it in the middle more than once: served
+   * slowly, it still finishes on its own, and how long the presses in between
+   * take is the machine's to decide. Held, it is under way and goes nowhere
+   * until it is let go.
+   */
+  stallSlowGame: (stalled: boolean) => void
   /** The token a client must present. See `seedCredentials`. */
   token: string
   /** What the sign-in screen's other two modes need typed into them. */
@@ -169,7 +178,12 @@ const SLOW_CHUNK_MS = 30
  * and a scenario that pauses it, picks it up and then cancels it has to be able
  * to catch it twice.
  */
-function serveSlowly(res: ServerResponse, bytes: Buffer, from = 0): void {
+function serveSlowly(
+  res: ServerResponse,
+  bytes: Buffer,
+  from: number,
+  stalled: () => boolean
+): void {
   const rest = bytes.subarray(from)
   res.writeHead(from > 0 ? 206 : 200, {
     'Content-Type': 'application/octet-stream',
@@ -184,6 +198,9 @@ function serveSlowly(res: ServerResponse, bytes: Buffer, from = 0): void {
       res.end()
       return
     }
+    // The first piece goes out regardless, so a held transfer has something
+    // to show for itself. See `FakeRomm.stallSlowGame`.
+    if (at > 0 && stalled()) return
     res.write(rest.subarray(at, at + SLOW_CHUNK))
     at += SLOW_CHUNK
   }, SLOW_CHUNK_MS)
@@ -665,6 +682,7 @@ function serveBytes(req: IncomingMessage, res: ServerResponse, bytes: Buffer): v
 /** Start it on a port the operating system picks, so tests can run at once. */
 export async function startFakeRomm(): Promise<FakeRomm> {
   const asked: Asked[] = []
+  let slowStalled = false
   const held: { save: RommSave; content: string }[] = []
   /** States this server holds, seeded by `holdState` or left by a push. */
   const heldStates: { state: RommState; content: string }[] = []
@@ -1196,7 +1214,7 @@ export async function startFakeRomm(): Promise<FakeRomm> {
         // and every transfer of this game is slow. See `serveSlowly`.
         const askedFor = /^bytes=(\d+)-(\d*)$/.exec(req.headers.range ?? '')
         if (askedFor && askedFor[2]) return serveBytes(req, res, SLOW_ROM_BYTES)
-        return serveSlowly(res, SLOW_ROM_BYTES, Number(askedFor?.[1] ?? 0))
+        return serveSlowly(res, SLOW_ROM_BYTES, Number(askedFor?.[1] ?? 0), () => slowStalled)
       }
 
       const fileContent = /^\/api\/roms\/(\d+)\/files\/content\/(.+)$/.exec(url.pathname)
@@ -1246,6 +1264,9 @@ export async function startFakeRomm(): Promise<FakeRomm> {
   return {
     baseUrl: `http://127.0.0.1:${port}`,
     asked,
+    stallSlowGame: (stalled) => {
+      slowStalled = stalled
+    },
     platforms: [megadrive, gameboy, nintendoSwitch, segacd],
     uploaded,
     holdPlaySession: ({ romId, seconds }) => {

@@ -728,6 +728,12 @@ describe('the downloads screen', () => {
  * that has anything to say about it.
  */
 describe('driving the queue from the activity tab', () => {
+  // Held for the whole of it: every step here wants the slow game caught in
+  // the middle, and left to run it can finish while the presses that would
+  // catch it are still being made.
+  before(() => server.stallSlowGame(true))
+  after(() => server.stallSlowGame(false))
+
   /** What the queue says about one game right now. */
   const stateOf = (romId: number): Promise<string | undefined> =>
     app.read<string | undefined>(
@@ -764,31 +770,35 @@ describe('driving the queue from the activity tab', () => {
       'the second game to be waiting its turn'
     )
 
+    const askedSoFar = server.asked.length
     await app.choose('[data-download="4"] [data-action="promote"]')
 
-    // The slow one gives way rather than being cancelled: it can be picked up
-    // where it stopped, which is the whole reason the button offers to start
-    // the other game now rather than merely next.
+    // The promoted game is small and done in a blink, and the slow one is back
+    // on the wire straight after — too quick a turn to be seen as a state. What
+    // stays behind is what it asked the server for.
     await app.waitFor(
-      `(await window.rommix.downloads.list()).find((one) => one.romId === 5)?.state !== 'downloading'`,
-      'the slow game to give the wire up'
+      `(await window.rommix.downloads.list()).find((one) => one.romId === 4)?.state === 'done'`,
+      'the promoted game to finish first'
     )
     await app.waitFor(
-      `['downloading', 'extracting', 'done'].includes(
-         (await window.rommix.downloads.list()).find((one) => one.romId === 4)?.state
-       )`,
-      'the promoted game to take it'
+      `(await window.rommix.downloads.list()).find((one) => one.romId === 5)?.state === 'downloading'`,
+      'the slow game to take the wire back'
+    )
+
+    // It gave way rather than being cancelled: it picked up where it stopped,
+    // which is the whole reason the button offers to start the other game now
+    // rather than merely next.
+    const resumed = server.asked
+      .slice(askedSoFar)
+      .filter((one) => one.path.startsWith('/api/roms/5/content/') && one.range !== null)
+      .map((one) => one.range)
+    assert.ok(
+      resumed.some((range) => /^bytes=[1-9]\d*-$/.test(range ?? '')),
+      `the slow game should have carried on from where it stopped: ${resumed.join(', ')}`
     )
   })
 
   test('pausing one stops it where it is, and it picks up from there', async () => {
-    // Back on the wire on its own once the promoted game is done, which is the
-    // other half of a queue: nothing is pressed to make this happen.
-    await app.waitFor(
-      `(await window.rommix.downloads.list()).find((one) => one.romId === 5)?.state === 'downloading'`,
-      'the slow game to get its turn back'
-    )
-
     await app.choose('[data-download="5"] [data-action="pause-transfer"]')
     await app.waitFor(
       `(await window.rommix.downloads.list()).find((one) => one.romId === 5)?.state === 'paused'`,
