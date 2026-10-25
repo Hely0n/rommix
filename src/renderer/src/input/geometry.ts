@@ -110,6 +110,12 @@ export function measure(
    * would put one or two extra stops inside every row of a list that can run to
    * thousands, when the point of walking down is to pass them. Right reaches
    * the actions, Left comes back out, Down carries on to the next row.
+   *
+   * Coming back out is measured to the row's far edge rather than counted as
+   * no distance at all. The row surrounds every button in it, so at zero it
+   * would beat the button beside the highlight on every press: Left off the
+   * last of a row's buttons would leave the row instead of walking back along
+   * them, and the ones in between could only ever be reached from the row.
    */
   const inside = (outer: Rect, inner: Rect): boolean =>
     inner.left >= outer.left &&
@@ -120,7 +126,10 @@ export function measure(
   if (inside(from, to) || inside(to, from)) {
     if (vertical) return null
     const towards = direction === 'right' ? to.cx > from.cx : to.cx < from.cx
-    return towards ? { gap: 0, cross: 0, inLine: true } : null
+    if (!towards) return null
+    const leaving = inside(to, from)
+    const gap = !leaving ? 0 : direction === 'right' ? to.right - from.right : from.left - to.left
+    return { gap, cross: 0, inLine: true }
   }
 
   const gap =

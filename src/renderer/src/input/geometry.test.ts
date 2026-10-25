@@ -135,7 +135,16 @@ describe('a button drawn inside a row', () => {
   })
 
   test('and left again from inside it', () => {
-    assert.deepEqual(measure(cancel, row, 'left', cancel.cy), { gap: 0, cross: 0, inLine: true })
+    assert.deepEqual(measure(cancel, row, 'left', cancel.cy), { gap: 700, cross: 0, inLine: true })
+  })
+
+  test('but not before the button beside it', () => {
+    // Run, Move up and Move down in an emulator's heading: Left off the last
+    // walks back along them before it leaves for the heading.
+    const run = box(600, 15, 80, 30)
+    const leave = measure(cancel, row, 'left', cancel.cy)
+    const step = measure(cancel, run, 'left', cancel.cy)
+    assert.ok(leave && step && step.gap + SAME_STEP_PX < leave.gap)
   })
 
   test('but never by walking down the list', () => {
