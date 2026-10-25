@@ -4,6 +4,14 @@ Newest first. `npm run release` adds the entry for a version, falling back to th
 commit subjects and ids since the previous tag — so write the section by hand
 before releasing if you want prose instead. See [Releasing](README.md#releasing).
 
+## 0.22.0 — 2026-10-25
+
+- test(app): hold the slow game while the queue scenarios catch it (227d306)
+- fix: sync the save states standalone Dolphin writes (1370625)
+- feat: show which version is the default and who chose it (061e76a)
+- fix: ignore the pads while the guide button is held (a58220f)
+- fix: let a pushed stick pick the active pad before any press (bf2486f)
+
 ## 0.21.0 — 2026-10-24
 
 - feat: show the installed version of a downloaded emulator (7e82d9b)
