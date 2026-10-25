@@ -54,6 +54,13 @@ export interface SaveLocation {
    */
   search?: readonly string[]
   match: SaveMatch
+  /**
+   * The name a `rom-stem` location files this game under, where it is not the
+   * ROM's. Dolphin names its states after the game id the disc declares —
+   * `RSBE01.s01` — so that id is what a file here is matched on and what a
+   * pulled one is written as.
+   */
+  stem?: string
 }
 
 /** Everything a descriptor can say about one game's save data. */
@@ -234,6 +241,11 @@ export function shared(dir: string): SaveLocation {
 /** A location whose whole directory is this game's save data. */
 export function directory(dir: string): SaveLocation {
   return { dir, match: 'directory' }
+}
+
+/** A location holding files named after something the game declares, not the ROM. */
+export function perGameId(dir: string, id: string, search?: readonly string[]): SaveLocation {
+  return { ...perRom(dir, search), stem: id }
 }
 
 /** A location holding files named after the ROM. */

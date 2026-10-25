@@ -23,8 +23,9 @@ export const SAVE_CONVENTIONS: SaveFileConventions = {
     '.bsv'
   ],
   // libretro numbers its states `.state1`, `.state2`, …, and writes the
-  // most recent one as `.auto`.
-  statePattern: /\.(state|auto)\d*$/i,
+  // most recent one as `.auto`. Dolphin numbers its slots `.s01`, `.s02`, …
+  // behind the game id. See `dolphinGameId`.
+  statePattern: /\.(?:(?:state|auto)\d*|s\d{2})$/i,
   // The PlayStation cards, which are the memory cards emulators write per
   // game rather than as one file for the whole library: DuckStation numbers
   // the slot behind an underscore, mednafen behind a dot.

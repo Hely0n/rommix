@@ -1,6 +1,7 @@
 import type { Text } from '@shared/i18n'
 import { coreForSystem } from '../../systems.ts'
 import { libretroSavePaths, readLibretroConfig, LIBRETRO_TAG } from '../libretro.ts'
+import { dolphinStates } from '../dolphin-saves.ts'
 import { baseName, directory, joinPath, perRom, shared } from '../savepaths.ts'
 import type { SaveContext, SaveLocation, SavePaths } from '../savepaths.ts'
 
@@ -33,7 +34,7 @@ function under(root: string | null, ...segments: readonly string[]): string | nu
 }
 
 /** A location, or null when its root is missing. */
-function at(path: string | null, make: (dir: string) => SaveLocation): SaveLocation | null {
+function at(path: string | null, make: (dir: string) => SaveLocation | null): SaveLocation | null {
   return path ? make(path) : null
 }
 
@@ -66,12 +67,12 @@ export const RETRODECK_COMPONENTS: Readonly<Record<string, ComponentSaves>> = {
    */
   dolphin: (ctx) => ({
     saves: at(under(savesRoot(ctx), ctx.system, 'dolphin'), shared),
-    states: at(under(statesRoot(ctx), 'dolphin'), (dir) => perRom(dir)),
+    states: at(under(statesRoot(ctx), 'dolphin'), (dir) => dolphinStates(ctx, dir)),
     unsyncableReason: 'saves.dolphin'
   }),
   primehack: (ctx) => ({
     saves: at(under(savesRoot(ctx), ctx.system, 'primehack'), shared),
-    states: at(under(statesRoot(ctx), 'primehack'), (dir) => perRom(dir)),
+    states: at(under(statesRoot(ctx), 'primehack'), (dir) => dolphinStates(ctx, dir)),
     unsyncableReason: 'saves.primehack'
   }),
 

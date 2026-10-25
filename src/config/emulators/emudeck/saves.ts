@@ -2,6 +2,7 @@ import type { Text } from '@shared/i18n'
 import { coreForSystem } from '../../systems.ts'
 import { libretroSavePaths, readLibretroConfig } from '../libretro.ts'
 import { joinPath, perRom, shared } from '../savepaths.ts'
+import { dolphinStates } from '../dolphin-saves.ts'
 import { switchSavePaths } from '../switch-saves.ts'
 import type { SaveContext, SavePaths } from '../savepaths.ts'
 
@@ -123,14 +124,14 @@ export const FOLDERS: Readonly<Record<string, FolderSaves>> = {
    */
   duckstation: (_ctx, root) => standard(root),
 
-  dolphin: (_ctx, root) => ({
+  dolphin: (ctx, root) => ({
     saves: shared(joinPath(root, 'GC')),
-    states: perRom(joinPath(root, 'StateSaves'), [root]),
+    states: dolphinStates(ctx, joinPath(root, 'StateSaves'), [root]),
     unsyncableReason: 'saves.dolphin'
   }),
-  primehack: (_ctx, root) => ({
+  primehack: (ctx, root) => ({
     saves: shared(joinPath(root, 'GC')),
-    states: perRom(joinPath(root, 'StateSaves'), [root]),
+    states: dolphinStates(ctx, joinPath(root, 'StateSaves'), [root]),
     unsyncableReason: 'saves.primehack'
   }),
 

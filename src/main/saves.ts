@@ -343,7 +343,7 @@ export class SaveSync {
     kind: 'save' | 'state',
     since = 0
   ): Promise<LocalAsset[]> {
-    const stem = romStemOf(rom, romPath)
+    const stem = location.stem ?? romStemOf(rom, romPath)
 
     // A directory save is one asset: the folder itself, named after the game so
     // the server has something readable to show.
@@ -1247,7 +1247,7 @@ export class SaveSync {
       })
     }
 
-    const stem = romStemOf(target.rom, target.romPath)
+    const stem = location.stem ?? romStemOf(target.rom, target.romPath)
     const local = await this.findLocal(location, target.rom, target.romPath, kind)
     /** The local file the shared slot answers to — see `primaryOf`. */
     const primary = this.primaryOf(kind, local, target)

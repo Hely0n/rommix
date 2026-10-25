@@ -373,6 +373,15 @@ const RETRODECK_CFG = retroArchCfg({
   sort_savestates_by_content_enable: 'true'
 })
 
+/**
+ * A GameCube disc image as RVZ: its own magic, then the disc header where RVZ
+ * keeps a copy of it, game id first. See `dolphinGameId`.
+ */
+function rvz(gameId: string): string {
+  const header = gameId.padEnd(0x1c, '\0') + '\xc2\x33\x9f\x3d'
+  return 'RVZ\x01'.padEnd(0x58, '\0') + header
+}
+
 function retroDeck(options: { romPath: string; system: string; gamelist?: string }): SavePaths {
   const files: Record<string, string> = {
     '/var/rd/config/retroarch/retroarch.cfg': RETRODECK_CFG
@@ -390,7 +399,7 @@ function retroDeck(options: { romPath: string; system: string; gamelist?: string
       saves: '/home/deck/retrodeck/saves',
       states: '/home/deck/retrodeck/states'
     },
-    env: machine({ files })
+    env: machine({ files, heads: { '/home/deck/retrodeck/roms/gc/game.rvz': rvz('GALE01') } })
   })
 }
 
@@ -494,6 +503,18 @@ test('Dolphin states sit outside the system tree entirely', () => {
   assert.equal(gc.emulator, 'dolphin')
 })
 
+test('Dolphin states are matched on the game id the disc declares', () => {
+  // `GALE01.s01`, not `game.state1`: nothing in the name is the ROM's.
+  const gc = retroDeck({ romPath: '/home/deck/retrodeck/roms/gc/game.rvz', system: 'gc' })
+  assert.equal(gc.states?.match, 'rom-stem')
+  assert.equal(gc.states?.stem, 'GALE01')
+})
+
+test('with no game id, Dolphin claims no states rather than the wrong ones', () => {
+  const gc = retroDeck({ romPath: '/home/deck/retrodeck/roms/gc/other.gcz', system: 'gc' })
+  assert.equal(gc.states, null)
+})
+
 test('a shared memory card is not offered for per-game sync, but its states are', () => {
   const ps2 = retroDeck({ romPath: '/home/deck/retrodeck/roms/ps2/game.chd', system: 'ps2' })
   assert.equal(ps2.saves?.match, 'shared')
@@ -588,7 +609,8 @@ function emuDeck(options: { romPath: string; system: string; variant?: string })
         ]
       },
       heads: {
-        [`${HOME}/Emulation/roms/switch/game.nsp`]: 'junk 010012300ABCD000.cnmt more'
+        [`${HOME}/Emulation/roms/switch/game.nsp`]: 'junk 010012300ABCD000.cnmt more',
+        [`${HOME}/Emulation/roms/gc/game.rvz`]: rvz('GALE01')
       }
     })
   })
@@ -626,6 +648,7 @@ test('a launcher script whose name is not the save folder is mapped, not guessed
 
   const gc = emuDeck({ romPath: `${HOME}/Emulation/roms/gc/game.rvz`, system: 'gc' })
   assert.equal(gc.states?.dir, `${HOME}/Emulation/saves/dolphin/StateSaves`)
+  assert.equal(gc.states?.stem, 'GALE01')
 })
 
 test('EmuDeck resolves a Switch game to its title-id folder', () => {

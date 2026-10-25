@@ -1753,3 +1753,62 @@ describe('pairing on the slot rather than the name', () => {
     assert.equal(byName?.localPath, null)
   })
 })
+
+describe('Dolphin, whose states are named after the disc', () => {
+  /**
+   * EmuDeck's Dolphin, on a GameCube game whose image is RVZ.
+   *
+   * Dolphin writes `StateSaves/<game id>.s01`, where nothing is the ROM's name,
+   * so the id has to come out of the image itself. See `dolphinGameId`.
+   */
+  function dolphin(options: Parameters<typeof setUp>[0] = {}): {
+    sync: SaveSync
+    target: SaveTarget
+    stateDir: string
+  } {
+    const { sync } = setUp(options)
+    const home = scratch()
+    const saves = join(home, 'Emulation', 'saves')
+    const stateDir = join(saves, 'dolphin', 'StateSaves')
+    const romPath = join(home, 'Emulation', 'roms', 'gc', 'Wind Waker (USA).rvz')
+    mkdirSync(stateDir, { recursive: true })
+    mkdirSync(join(romPath, '..'), { recursive: true })
+    const header = 'GZLE01'.padEnd(0x1c, '\0') + '\xc2\x33\x9f\x3d'
+    writeFileSync(romPath, Buffer.from('RVZ\x01'.padEnd(0x58, '\0') + header, 'latin1'))
+
+    const emulator = {
+      id: 'emudeck',
+      name: 'EmuDeck',
+      available: true,
+      install: null,
+      configDir: null,
+      dataDir: null,
+      unavailableReason: null,
+      paths: { home, roms: join(home, 'Emulation', 'roms'), saves, states: null, bios: home }
+    } as EmulatorState
+    return { sync, target: { rom, emulator, system: 'gc', romPath }, stateDir }
+  }
+
+  test('a state on disk is this game’s by the id in the image', async () => {
+    const { sync, target, stateDir } = dolphin()
+    writeFileSync(join(stateDir, 'GZLE01.s01'), 'local')
+    // Another game's, which the id keeps out.
+    writeFileSync(join(stateDir, 'GALE01.s01'), 'local')
+
+    const assets = await sync.listAssets(7, target)
+
+    assert.deepEqual(
+      assets.map((asset) => asset.fileName),
+      ['GZLE01.s01']
+    )
+  })
+
+  test('a state on the server comes down under the name Dolphin opens', async () => {
+    const { sync, target, stateDir } = dolphin({
+      states: [save({ file_name: 'GZLE01.s01', emulator: 'dolphin' }) as unknown as RommState]
+    })
+
+    assert.equal((await sync.pullNow(target)).states, 1)
+    assert.equal(readFileSync(join(stateDir, 'GZLE01.s01'), 'utf8'), 'from the server')
+  })
+})

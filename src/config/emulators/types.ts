@@ -221,7 +221,7 @@ export interface LayoutDiscovery {
 export interface SaveFileConventions {
   /** Battery-save extensions, lowercase and including the dot. */
   saveExtensions: readonly string[]
-  /** Matches a save state; libretro numbers them `.state1`, `.state2`, … */
+  /** Matches a save state: libretro's `.state1`, `.state2`, … and Dolphin's `.s01`, … */
   statePattern: RegExp
   /**
    * The save extensions whose files are written one per console slot.
