@@ -399,7 +399,13 @@ function retroDeck(options: { romPath: string; system: string; gamelist?: string
       saves: '/home/deck/retrodeck/saves',
       states: '/home/deck/retrodeck/states'
     },
-    env: machine({ files, heads: { '/home/deck/retrodeck/roms/gc/game.rvz': rvz('GALE01') } })
+    env: machine({
+      files,
+      heads: {
+        '/home/deck/retrodeck/roms/gc/game.rvz': rvz('GALE01'),
+        '/home/deck/retrodeck/roms/wii/game.rvz': rvz('RSBE01')
+      }
+    })
   })
 }
 
@@ -610,7 +616,8 @@ function emuDeck(options: { romPath: string; system: string; variant?: string })
       },
       heads: {
         [`${HOME}/Emulation/roms/switch/game.nsp`]: 'junk 010012300ABCD000.cnmt more',
-        [`${HOME}/Emulation/roms/gc/game.rvz`]: rvz('GALE01')
+        [`${HOME}/Emulation/roms/gc/game.rvz`]: rvz('GALE01'),
+        [`${HOME}/Emulation/roms/wii/game.rvz`]: rvz('RSBE01')
       }
     })
   })
@@ -1444,4 +1451,23 @@ test('every core RomMix loads has the name it files saves under', () => {
   cores.delete(null)
   const unnamed = [...cores].filter((core) => coreLibraryName(core) === null)
   assert.deepEqual(unnamed, [])
+})
+
+test('a Wii game syncs its own title folder out of the NAND RetroDECK links', () => {
+  const wii = retroDeck({ romPath: '/home/deck/retrodeck/roms/wii/game.rvz', system: 'wii' })
+  assert.equal(wii.saves?.match, 'directory')
+  assert.equal(
+    wii.saves?.dir,
+    '/home/deck/retrodeck/saves/wii/dolphin/title/00010000/52534245/data'
+  )
+  assert.equal(wii.unsyncableReason, undefined)
+})
+
+test('EmuDeck resolves a Wii game to its title folder in the linked NAND', () => {
+  const wii = emuDeck({ romPath: `${HOME}/Emulation/roms/wii/game.rvz`, system: 'wii' })
+  assert.equal(wii.saves?.match, 'directory')
+  assert.equal(wii.saves?.dir, `${HOME}/Emulation/saves/dolphin/Wii/title/00010000/52534245/data`)
+
+  const gc = emuDeck({ romPath: `${HOME}/Emulation/roms/gc/game.rvz`, system: 'gc' })
+  assert.equal(gc.saves?.match, 'shared')
 })

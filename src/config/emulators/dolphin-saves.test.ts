@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
-import { dolphinGameId } from './dolphin-saves.ts'
+import { dolphinGameId, wiiTitleFolder } from './dolphin-saves.ts'
 import type { SaveEnvironment } from './savepaths.ts'
 
 /**
@@ -60,5 +60,12 @@ describe('the game id of a disc', () => {
   test('and none from a file that cannot be read', () => {
     const missing = { head: () => null } as unknown as SaveEnvironment
     assert.equal(dolphinGameId(missing, '/roms/game.iso'), null)
+  })
+})
+
+describe('the NAND folder of a Wii disc game', () => {
+  test('is the first four characters of the game id as lowercase hex', () => {
+    assert.equal(wiiTitleFolder('RSBE01'), '52534245')
+    assert.equal(wiiTitleFolder('SZBE69'), '535a4245')
   })
 })

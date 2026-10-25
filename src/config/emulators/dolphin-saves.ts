@@ -1,5 +1,6 @@
-import { perGameId } from './savepaths.ts'
-import type { SaveContext, SaveEnvironment, SaveLocation } from './savepaths.ts'
+import type { Text } from '@shared/i18n'
+import { directory, joinPath, perGameId, shared } from './savepaths.ts'
+import type { SaveContext, SaveEnvironment, SaveLocation, SavePaths } from './savepaths.ts'
 
 /**
  * The game id a GameCube or Wii disc declares, which Dolphin names its save
@@ -73,4 +74,33 @@ export function dolphinStates(
 ): SaveLocation | null {
   const id = dolphinGameId(ctx.env, ctx.romPath)
   return id ? perGameId(dir, id, search) : null
+}
+
+/** The title type the Wii gives a game booted from a disc. */
+const DISC_TITLE_TYPE = '00010000'
+
+/**
+ * The NAND folder a Wii disc game's title id names: the first four characters
+ * of its game id as hex, lowercase as Dolphin writes it — `RSBE01` is `52534245`.
+ */
+export function wiiTitleFolder(gameId: string): string {
+  return Array.from(gameId.slice(0, 4), (char) =>
+    char.charCodeAt(0).toString(16).padStart(2, '0')
+  ).join('')
+}
+
+/** A Wii disc game's own NAND folder, synced whole; anything else stays shared. */
+export function dolphinSaves(
+  ctx: SaveContext,
+  wiiRoot: string | null,
+  cards: string | null,
+  reason: Text
+): Pick<SavePaths, 'saves' | 'unsyncableReason'> {
+  const id = ctx.system === 'wii' && wiiRoot ? dolphinGameId(ctx.env, ctx.romPath) : null
+  if (id && wiiRoot) {
+    return {
+      saves: directory(joinPath(wiiRoot, 'title', DISC_TITLE_TYPE, wiiTitleFolder(id), 'data'))
+    }
+  }
+  return { saves: cards ? shared(cards) : null, unsyncableReason: reason }
 }
