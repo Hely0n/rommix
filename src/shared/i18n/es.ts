@@ -259,6 +259,10 @@ export const es: Catalog = {
   'library.versions_one': '{count} versión',
   'library.versions_other': '{count} versiones',
   'versions.current': 'Versión actual',
+  'versions.marked': 'Predeterminada',
+  'versions.markedHint': 'Marcada en RomM como la versión que representa este juego.',
+  'versions.picked': 'Predeterminada (RomM)',
+  'versions.pickedHint': 'Ninguna está marcada en RomM, así que RomM eligió esta.',
 
   // -- las estanterías del usuario en RomM -----------------------------------
 

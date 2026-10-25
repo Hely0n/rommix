@@ -266,6 +266,10 @@ export const en = {
   'library.versions_one': '{count} version',
   'library.versions_other': '{count} versions',
   'versions.current': 'Current version',
+  'versions.marked': 'Default',
+  'versions.markedHint': 'Marked in RomM as the version standing for this game.',
+  'versions.picked': 'Default (RomM)',
+  'versions.pickedHint': 'None is marked in RomM, so RomM picked this one.',
 
   // -- the user's own shelves on RomM ---------------------------------------
 

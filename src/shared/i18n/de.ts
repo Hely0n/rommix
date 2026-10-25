@@ -266,6 +266,10 @@ export const de: Catalog = {
   'library.versions_one': '{count} Fassung',
   'library.versions_other': '{count} Fassungen',
   'versions.current': 'Aktuelle Fassung',
+  'versions.marked': 'Standard',
+  'versions.markedHint': 'In RomM als die Fassung markiert, die für dieses Spiel steht.',
+  'versions.picked': 'Standard (RomM)',
+  'versions.pickedHint': 'In RomM ist keine markiert, also hat RomM diese gewählt.',
 
   // -- die eigenen Regale des Nutzers auf RomM -------------------------------
 

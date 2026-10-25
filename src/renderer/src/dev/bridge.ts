@@ -142,7 +142,8 @@ const UNMATCHED: RommRom = {
     rating: 0,
     difficulty: 0,
     completion: 0,
-    status: null
+    status: null,
+    is_main_sibling: false
   },
   files: [],
   merged_screenshots: [],

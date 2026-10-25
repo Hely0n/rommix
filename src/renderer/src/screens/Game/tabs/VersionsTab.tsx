@@ -4,6 +4,7 @@ import { StatusBadge } from '../../../components'
 import { Icon } from '../../../icons'
 import { useFocusable } from '../../../input/focus'
 import { useI18n } from '../../../state'
+import { markedVersion, pickedVersion, pickQuery } from './versions'
 
 /**
  * Every dump of this game, this one included.
@@ -26,6 +27,10 @@ import { useI18n } from '../../../state'
  * carries none — which is most base releases — left a row with nothing to be
  * called: one row read as a label and the next as a filename. The file name is
  * a thing every dump has, and the chips beside it say what it is.
+ *
+ * One row is the version standing for the game — the one a grouped grid shows
+ * and opens — and it says why: marked by this user in RomM, or picked by RomM
+ * among versions nobody marked. See `markedVersion` and `pickedVersion`.
  */
 export function VersionsTab({
   rom,
@@ -39,6 +44,25 @@ export function VersionsTab({
   onOpen: (romId: number) => void
 }): JSX.Element {
   const [details, setDetails] = useState<Map<number, RommRom>>(new Map())
+  const marked = markedVersion(rom, siblings)
+  /** RomM's pick where nothing is marked; null until it has answered, or if it cannot. */
+  const [picked, setPicked] = useState<number | null>(null)
+
+  useEffect(() => {
+    setPicked(null)
+    if (marked !== undefined) return
+    let listening = true
+    void window.rommix.library
+      .roms(pickQuery(rom))
+      .then((page) => {
+        if (listening) setPicked(pickedVersion(page.items, rom, siblings))
+      })
+      // Without it the rows only lose a label; nothing on them depends on it.
+      .catch(() => undefined)
+    return () => {
+      listening = false
+    }
+  }, [rom, siblings, marked])
 
   useEffect(() => {
     setDetails(new Map())
@@ -77,6 +101,7 @@ export function VersionsTab({
           fsNameNoExt={row.fsNameNoExt}
           detail={row.id === rom.id ? rom : details.get(row.id)}
           current={row.id === rom.id}
+          standing={row.id === marked ? 'marked' : row.id === picked ? 'picked' : null}
           installed={installedIds.has(row.id)}
           onSelect={() => onOpen(row.id)}
         />
@@ -99,6 +124,7 @@ function VersionRow({
   fsNameNoExt,
   detail,
   current,
+  standing,
   installed,
   onSelect
 }: {
@@ -107,6 +133,8 @@ function VersionRow({
   /** The record behind this dump, absent until it arrives. */
   detail: RommRom | undefined
   current: boolean
+  /** Whether this is the version standing for the game, and who chose it. */
+  standing: 'marked' | 'picked' | null
   installed: boolean
   onSelect: () => void
 }): JSX.Element {
@@ -160,9 +188,27 @@ function VersionRow({
       {/* At the end of the row, where a row's own state belongs: in front it
           stood among the chips describing the file and pushed them out of line
           with every other row. */}
-      {current ? (
+      {current || standing ? (
         <span className="asset__here">
-          <StatusBadge tone="info" icon="details" label={t('versions.current')} />
+          {standing === 'marked' ? (
+            <StatusBadge
+              tone="ok"
+              icon="confirm"
+              label={t('versions.marked')}
+              title={t('versions.markedHint')}
+            />
+          ) : null}
+          {standing === 'picked' ? (
+            <StatusBadge
+              tone="off"
+              icon="group"
+              label={t('versions.picked')}
+              title={t('versions.pickedHint')}
+            />
+          ) : null}
+          {current ? (
+            <StatusBadge tone="info" icon="details" label={t('versions.current')} />
+          ) : null}
         </span>
       ) : null}
     </li>

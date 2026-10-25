@@ -260,6 +260,10 @@ export const fr: Catalog = {
   'library.versions_one': '{count} version',
   'library.versions_other': '{count} versions',
   'versions.current': 'Version actuelle',
+  'versions.marked': 'Par défaut',
+  'versions.markedHint': 'Marquée dans RomM comme la version qui représente ce jeu.',
+  'versions.picked': 'Par défaut (RomM)',
+  'versions.pickedHint': 'Aucune n’est marquée dans RomM, alors RomM a choisi celle-ci.',
 
   // -- les étagères de l'utilisateur sur RomM --------------------------------
 

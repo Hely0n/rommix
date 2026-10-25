@@ -230,6 +230,12 @@ export interface RommRomUser {
   completion: number
   /** Null until somebody has said. See `RomUserStatus`. */
   status: RomUserStatus | null
+  /**
+   * This user marked this version as the one standing for its game. False
+   * until somebody does: RomM's own pick among unmarked versions is recorded
+   * nowhere, so this is what tells the two apart.
+   */
+  is_main_sibling: boolean
 }
 
 /**
@@ -272,8 +278,10 @@ export interface RommRomMetadata {
  * of one game — and the server works them out, which is what makes a grouped
  * grid possible without RomMix matching file names against each other.
  *
- * `is_main_sibling` is the server's own answer to which of them stands for the
- * set, and is what a grouped query returns the row for.
+ * `is_main_sibling` says this user marked that version as the one standing for
+ * the set, and a grouped query returns the row for a marked one first. With
+ * none marked, it still returns one, by RomM's own order — which no field
+ * names. See `RommRomUser.is_main_sibling`.
  *
  * `fs_name_no_ext` and `fs_name_no_tags` are both here because the difference
  * between them is the only thing that tells two versions apart on screen: what
