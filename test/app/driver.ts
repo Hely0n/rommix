@@ -45,6 +45,15 @@ export const SETTLE_TIMEOUT_MS = 15_000
 export const POLL_MS = 100
 
 /**
+ * How long `goTo` waits for a section to open after Enter, before it takes the
+ * press as lost and walks the menu again.
+ *
+ * Short, because a press that reached the menu item opens the section on the
+ * next render; anything left waiting past that is a press that went elsewhere.
+ */
+const OPEN_TIMEOUT_MS = 2000
+
+/**
  * Where a failure leaves its screenshot. See `capture`.
  *
  * Under the repository rather than in a temporary folder, because the reader is
@@ -1114,6 +1123,20 @@ export async function startApp(options: StartOptions): Promise<App> {
       read<boolean>(
         `document.querySelector(${JSON.stringify(item)})?.matches('[data-focused="true"]') ?? false`
       )
+    const opened = async (): Promise<boolean> => {
+      const until = Date.now() + OPEN_TIMEOUT_MS
+      while (Date.now() < until) {
+        if (
+          await read<boolean>(
+            `document.querySelector('[data-screen]')?.dataset.screen === ${JSON.stringify(route)}`
+          )
+        ) {
+          return true
+        }
+        await new Promise((resolve) => setTimeout(resolve, POLL_MS))
+      }
+      return false
+    }
 
     // Three goes at it, because a screen still filling can move the highlight
     // out of the bar between measuring the distance and walking it — which is
@@ -1144,7 +1167,13 @@ export async function startApp(options: StartOptions): Promise<App> {
         if (!(await inBar())) break
         await press(distance > 0 ? 'Right' : 'Left')
       }
-      if (await arrived()) return press('Enter')
+      if (!(await arrived())) continue
+
+      // Confirmed rather than assumed. A screen still filling can take the
+      // highlight between the last look and the press, and Enter then lands on
+      // whatever took it while the section never opens.
+      await press('Enter')
+      if (await opened()) return
     }
 
     throw new Error(
