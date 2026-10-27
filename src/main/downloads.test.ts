@@ -883,6 +883,10 @@ describe('after a restart', () => {
     const root = scratch()
     process.env.ROMMIX_HOME = root
     const store = new Store(join(root, 'config'))
+    // Killed only once the bytes are on disk. A fixed wait cannot promise that
+    // the transfer got that far on a busy machine.
+    let wrote = (): void => undefined
+    const written = new Promise<void>((resolve) => (wrote = resolve))
     const client = {
       async supportsRange() {
         return true
@@ -895,6 +899,7 @@ describe('after a restart', () => {
       },
       async downloadRom(_rom: RommRom, destination: string) {
         await writeFile(`${destination}.part`, '0123')
+        wrote()
         await new Promise(() => undefined)
       }
     } as unknown as RommClient
@@ -904,7 +909,7 @@ describe('after a restart', () => {
       new Library(store, client, cache(client), () => null)
     )
     await killed.enqueue(rom())
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    await written
 
     const { client: next, resumed } = fakeClient({ contents: '0123456789', roms: { 1: rom() } })
     const restarted = new DownloadManager(
