@@ -1,9 +1,11 @@
-import { perGameId } from './savepaths.ts'
-import type { SaveContext, SaveEnvironment, SaveLocation } from './savepaths.ts'
+import type { Text } from '@shared/i18n'
+import { directory, joinPath, perGameId, shared } from './savepaths.ts'
+import type { SaveContext, SaveEnvironment, SaveLocation, SavePaths } from './savepaths.ts'
 
 /**
  * The game id a GameCube or Wii disc declares, which Dolphin names its save
- * states after: `StateSaves/RSBE01.s01`.
+ * states after — `StateSaves/RSBE01.s01` — and, for a Wii game, the NAND
+ * folder its save lives in (see `wiiTitleFolder`).
  *
  * Nothing in that name is the ROM's, but the id is the first six bytes of the
  * disc header, and most image formats Dolphin plays keep that header near the
@@ -73,4 +75,47 @@ export function dolphinStates(
 ): SaveLocation | null {
   const id = dolphinGameId(ctx.env, ctx.romPath)
   return id ? perGameId(dir, id, search) : null
+}
+
+/** The title type the Wii gives a game booted from a disc. */
+const DISC_TITLE_TYPE = '00010000'
+
+/**
+ * The NAND folder a Wii disc game's title id names: the first four characters
+ * of its game id as hex, lowercase as Dolphin writes it — `RSBE01` is `52534245`.
+ */
+export function wiiTitleFolder(gameId: string): string {
+  return Array.from(gameId.slice(0, 4), (char) =>
+    char.charCodeAt(0).toString(16).padStart(2, '0')
+  ).join('')
+}
+
+/**
+ * Where Dolphin keeps this game's saves, given the folder it uses for the
+ * game's system: the Wii NAND for a Wii game, the memory cards otherwise.
+ *
+ * A Wii disc game writes only to its own title folder, so that folder is synced
+ * whole. A memory card holds every GameCube game at once and stays shared, with
+ * `cardReason` saying so; a Wii game whose id cannot be read stays shared too,
+ * since no folder in the NAND can be named as its own.
+ */
+export function dolphinSaves(
+  ctx: SaveContext,
+  dir: string | null,
+  cardReason: Text,
+  emulator: string
+): Pick<SavePaths, 'saves' | 'unsyncableReason'> {
+  if (ctx.system !== 'wii') {
+    return { saves: dir ? shared(dir) : null, unsyncableReason: cardReason }
+  }
+  if (!dir) return { saves: null }
+
+  const id = dolphinGameId(ctx.env, ctx.romPath)
+  if (!id) {
+    return {
+      saves: shared(dir),
+      unsyncableReason: { key: 'saves.wiiNoGameId', params: { emulator } }
+    }
+  }
+  return { saves: directory(joinPath(dir, 'title', DISC_TITLE_TYPE, wiiTitleFolder(id), 'data')) }
 }

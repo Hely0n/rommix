@@ -617,7 +617,7 @@ export const de: Catalog = {
   'saves.pcsx2':
     'PCSX2 führt eine einzige Memory Card für alle PS2-Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
   'saves.dolphin':
-    'Dolphin führt eine GameCube-Memory-Card pro Region und einen einzigen Wii-NAND für alle Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
+    'Dolphin führt eine GameCube-Memory-Card pro Region für alle GameCube-Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
   'saves.primehack':
     'PrimeHack führt eine einzige Memory Card für alle Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
   'saves.ppsspp':
@@ -655,6 +655,8 @@ export const de: Catalog = {
   'setup.shadps4Roms':
     'Den ROM-Ordner von RomMix in shadPS4 eintragen, damit dessen Spieleliste findet, was Sie herunterladen.',
 
+  'saves.wiiNoGameId':
+    '{emulator} legt Wii-Spielstände unter der im Disc-Image hinterlegten Spiel-ID ab, die RomMix aus diesem nicht lesen kann.',
   'saves.switchNoTitleId':
     'RomMix konnte für dieses Spiel keine Title-ID lesen, und genau danach benennt {emulator} ' +
     'seinen Spielstandsordner. Eine ROM, die ihre Title-ID im Dateinamen trägt, oder eine ' +

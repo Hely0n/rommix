@@ -1,7 +1,7 @@
 import type { Text } from '@shared/i18n'
 import { coreForSystem } from '../../systems.ts'
 import { libretroSavePaths, readLibretroConfig, LIBRETRO_TAG } from '../libretro.ts'
-import { dolphinStates } from '../dolphin-saves.ts'
+import { dolphinSaves, dolphinStates } from '../dolphin-saves.ts'
 import { baseName, directory, joinPath, perRom, shared } from '../savepaths.ts'
 import type { SaveContext, SaveLocation, SavePaths } from '../savepaths.ts'
 
@@ -60,20 +60,25 @@ export const RETRODECK_COMPONENTS: Readonly<Record<string, ComponentSaves>> = {
   duckstation: cardEmulator('duckstation', 'saves.retrodeckDuckstation'),
 
   /**
-   * Dolphin keeps GameCube memory cards under a region folder and the Wii NAND
-   * as one tree, neither of which is per-game. Its states are, and they sit at
+   * Dolphin's save folder is per system: `<saves>/gc/dolphin` holds the
+   * GameCube memory cards under a region folder, which is not per-game, and
+   * `<saves>/wii/dolphin` is the Wii NAND itself, where each disc game has a
+   * title folder of its own — see `dolphinSaves`. States sit at
    * `<states>/dolphin` — no system component at all, which is why the layout is
    * spelled out per component here rather than derived.
    */
   dolphin: (ctx) => ({
-    saves: at(under(savesRoot(ctx), ctx.system, 'dolphin'), shared),
-    states: at(under(statesRoot(ctx), 'dolphin'), (dir) => dolphinStates(ctx, dir)),
-    unsyncableReason: 'saves.dolphin'
+    ...dolphinSaves(ctx, under(savesRoot(ctx), ctx.system, 'dolphin'), 'saves.dolphin', 'Dolphin'),
+    states: at(under(statesRoot(ctx), 'dolphin'), (dir) => dolphinStates(ctx, dir))
   }),
   primehack: (ctx) => ({
-    saves: at(under(savesRoot(ctx), ctx.system, 'primehack'), shared),
-    states: at(under(statesRoot(ctx), 'primehack'), (dir) => dolphinStates(ctx, dir)),
-    unsyncableReason: 'saves.primehack'
+    ...dolphinSaves(
+      ctx,
+      under(savesRoot(ctx), ctx.system, 'primehack'),
+      'saves.primehack',
+      'PrimeHack'
+    ),
+    states: at(under(statesRoot(ctx), 'primehack'), (dir) => dolphinStates(ctx, dir))
   }),
 
   /** melonDS names both its `.sav` and its states after the ROM. */
