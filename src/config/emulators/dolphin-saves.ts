@@ -4,7 +4,8 @@ import type { SaveContext, SaveEnvironment, SaveLocation, SavePaths } from './sa
 
 /**
  * The game id a GameCube or Wii disc declares, which Dolphin names its save
- * states after: `StateSaves/RSBE01.s01`.
+ * states after — `StateSaves/RSBE01.s01` — and, for a Wii game, the NAND
+ * folder its save lives in (see `wiiTitleFolder`).
  *
  * Nothing in that name is the ROM's, but the id is the first six bytes of the
  * disc header, and most image formats Dolphin plays keep that header near the
@@ -89,18 +90,32 @@ export function wiiTitleFolder(gameId: string): string {
   ).join('')
 }
 
-/** A Wii disc game's own NAND folder, synced whole; anything else stays shared. */
+/**
+ * Where Dolphin keeps this game's saves, given the folder it uses for the
+ * game's system: the Wii NAND for a Wii game, the memory cards otherwise.
+ *
+ * A Wii disc game writes only to its own title folder, so that folder is synced
+ * whole. A memory card holds every GameCube game at once and stays shared, with
+ * `cardReason` saying so; a Wii game whose id cannot be read stays shared too,
+ * since no folder in the NAND can be named as its own.
+ */
 export function dolphinSaves(
   ctx: SaveContext,
-  wiiRoot: string | null,
-  cards: string | null,
-  reason: Text
+  dir: string | null,
+  cardReason: Text,
+  emulator: string
 ): Pick<SavePaths, 'saves' | 'unsyncableReason'> {
-  const id = ctx.system === 'wii' && wiiRoot ? dolphinGameId(ctx.env, ctx.romPath) : null
-  if (id && wiiRoot) {
+  if (ctx.system !== 'wii') {
+    return { saves: dir ? shared(dir) : null, unsyncableReason: cardReason }
+  }
+  if (!dir) return { saves: null }
+
+  const id = dolphinGameId(ctx.env, ctx.romPath)
+  if (!id) {
     return {
-      saves: directory(joinPath(wiiRoot, 'title', DISC_TITLE_TYPE, wiiTitleFolder(id), 'data'))
+      saves: shared(dir),
+      unsyncableReason: { key: 'saves.wiiNoGameId', params: { emulator } }
     }
   }
-  return { saves: cards ? shared(cards) : null, unsyncableReason: reason }
+  return { saves: directory(joinPath(dir, 'title', DISC_TITLE_TYPE, wiiTitleFolder(id), 'data')) }
 }

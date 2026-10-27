@@ -613,7 +613,7 @@ export const en = {
   'saves.pcsx2':
     'PCSX2 keeps one memory card shared by every PS2 game, so there is no save file that belongs to this one. Save states are synced.',
   'saves.dolphin':
-    'Dolphin keeps one GameCube memory card per region and one Wii NAND for every game, so there is no save file that belongs to this one. Save states are synced.',
+    'Dolphin keeps one GameCube memory card per region, shared by every game, so there is no save file that belongs to this one. Save states are synced.',
   'saves.primehack':
     'PrimeHack keeps one memory card for every game, so there is no save file that belongs to this one. Save states are synced.',
   'saves.ppsspp':
@@ -650,6 +650,8 @@ export const en = {
   'setup.shadps4Roms':
     "Add RomMix's ROM folder to shadPS4, so its game list finds what you download.",
 
+  'saves.wiiNoGameId':
+    '{emulator} files Wii saves under the game id inside the disc image, which RomMix cannot read from this one.',
   'saves.switchNoTitleId':
     'RomMix could not read a title id for this game, which is how {emulator} names its save ' +
     'folder. A ROM that carries its title id in the file name, or an unmodified NSP or XCI, ' +

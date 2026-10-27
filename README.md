@@ -274,9 +274,10 @@ one RomMix folder you point every emulator at.
 - **Ask before sending saves to RomM** — on by default. Lists the files and
   sends only what you approve.
 
-Saves named after the ROM sync cleanly, and Switch-family saves are matched by
-title id. Emulators that share one memory card between every game cannot be
-synced, and RomMix says so rather than uploading the wrong data.
+Saves named after the ROM sync cleanly, Switch-family saves are matched by
+title id, and Wii saves by the game id on the disc. Emulators that share one
+memory card between every game cannot be synced, and RomMix says so rather than
+uploading the wrong data.
 
 **Games → Downloads → Ask before deleting a downloaded game**, on by default.
 

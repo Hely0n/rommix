@@ -60,26 +60,26 @@ export const RETRODECK_COMPONENTS: Readonly<Record<string, ComponentSaves>> = {
   duckstation: cardEmulator('duckstation', 'saves.retrodeckDuckstation'),
 
   /**
-   * Dolphin keeps GameCube memory cards under a region folder, which is not
-   * per-game. `<saves>/wii/dolphin` is the Wii NAND itself, where each disc game
-   * has a title folder of its own — see `dolphinSaves`. States sit at
+   * Dolphin's save folder is per system: `<saves>/gc/dolphin` holds the
+   * GameCube memory cards under a region folder, which is not per-game, and
+   * `<saves>/wii/dolphin` is the Wii NAND itself, where each disc game has a
+   * title folder of its own — see `dolphinSaves`. States sit at
    * `<states>/dolphin` — no system component at all, which is why the layout is
    * spelled out per component here rather than derived.
    */
-  dolphin: (ctx) => {
-    const saves = under(savesRoot(ctx), ctx.system, 'dolphin')
-    return {
-      ...dolphinSaves(ctx, saves, saves, 'saves.dolphin'),
-      states: at(under(statesRoot(ctx), 'dolphin'), (dir) => dolphinStates(ctx, dir))
-    }
-  },
-  primehack: (ctx) => {
-    const saves = under(savesRoot(ctx), ctx.system, 'primehack')
-    return {
-      ...dolphinSaves(ctx, saves, saves, 'saves.primehack'),
-      states: at(under(statesRoot(ctx), 'primehack'), (dir) => dolphinStates(ctx, dir))
-    }
-  },
+  dolphin: (ctx) => ({
+    ...dolphinSaves(ctx, under(savesRoot(ctx), ctx.system, 'dolphin'), 'saves.dolphin', 'Dolphin'),
+    states: at(under(statesRoot(ctx), 'dolphin'), (dir) => dolphinStates(ctx, dir))
+  }),
+  primehack: (ctx) => ({
+    ...dolphinSaves(
+      ctx,
+      under(savesRoot(ctx), ctx.system, 'primehack'),
+      'saves.primehack',
+      'PrimeHack'
+    ),
+    states: at(under(statesRoot(ctx), 'primehack'), (dir) => dolphinStates(ctx, dir))
+  }),
 
   /** melonDS names both its `.sav` and its states after the ROM. */
   melonds: (ctx) => ({

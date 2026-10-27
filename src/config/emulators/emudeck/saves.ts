@@ -81,6 +81,11 @@ function cards(root: string, reason: Text): SavePaths {
   }
 }
 
+/** The Wii NAND for a Wii game, the memory cards otherwise — see `dolphinSaves`. */
+function dolphinSaveDir(ctx: SaveContext, root: string): string {
+  return joinPath(root, ctx.system === 'wii' ? 'Wii' : 'GC')
+}
+
 export const FOLDERS: Readonly<Record<string, FolderSaves>> = {
   /**
    * EmuDeck ships every RetroArch sort flag off, so saves land flat in
@@ -125,11 +130,11 @@ export const FOLDERS: Readonly<Record<string, FolderSaves>> = {
   duckstation: (_ctx, root) => standard(root),
 
   dolphin: (ctx, root) => ({
-    ...dolphinSaves(ctx, joinPath(root, 'Wii'), joinPath(root, 'GC'), 'saves.dolphin'),
+    ...dolphinSaves(ctx, dolphinSaveDir(ctx, root), 'saves.dolphin', 'Dolphin'),
     states: dolphinStates(ctx, joinPath(root, 'StateSaves'), [root])
   }),
   primehack: (ctx, root) => ({
-    ...dolphinSaves(ctx, joinPath(root, 'Wii'), joinPath(root, 'GC'), 'saves.primehack'),
+    ...dolphinSaves(ctx, dolphinSaveDir(ctx, root), 'saves.primehack', 'PrimeHack'),
     states: dolphinStates(ctx, joinPath(root, 'StateSaves'), [root])
   }),
 

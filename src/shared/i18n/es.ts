@@ -605,7 +605,7 @@ export const es: Catalog = {
   'saves.pcsx2':
     'PCSX2 mantiene una sola tarjeta de memoria compartida por todos los juegos de PS2, así que no hay ninguna partida guardada que pertenezca a este. Los estados guardados sí se sincronizan.',
   'saves.dolphin':
-    'Dolphin mantiene una tarjeta de memoria de GameCube por región y una sola NAND de Wii para todos los juegos, así que no hay ninguna partida guardada que pertenezca a este. Los estados guardados sí se sincronizan.',
+    'Dolphin mantiene una tarjeta de memoria de GameCube por región, compartida por todos los juegos, así que no hay ninguna partida guardada que pertenezca a este. Los estados guardados sí se sincronizan.',
   'saves.primehack':
     'PrimeHack mantiene una sola tarjeta de memoria para todos los juegos, así que no hay ninguna partida guardada que pertenezca a este. Los estados guardados sí se sincronizan.',
   'saves.ppsspp':
@@ -642,6 +642,8 @@ export const es: Catalog = {
   'setup.shadps4Roms':
     'Añade la carpeta de ROM de RomMix a shadPS4, para que su lista de juegos encuentre lo que descargas.',
 
+  'saves.wiiNoGameId':
+    '{emulator} archiva las partidas de Wii bajo el identificador de juego impreso dentro de la imagen de disco, que RomMix no puede leer en esta.',
   'saves.switchNoTitleId':
     'RomMix no ha podido leer un identificador de título para este juego, que es con lo que ' +
     '{emulator} nombra su carpeta de partidas. Una ROM que lleve su identificador de título en el ' +

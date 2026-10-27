@@ -521,6 +521,26 @@ test('with no game id, Dolphin claims no states rather than the wrong ones', () 
   assert.equal(gc.states, null)
 })
 
+test('a Wii game syncs its own title folder out of the NAND RetroDECK links', () => {
+  const wii = retroDeck({ romPath: '/home/deck/retrodeck/roms/wii/game.rvz', system: 'wii' })
+  assert.equal(wii.saves?.match, 'directory')
+  assert.equal(
+    wii.saves?.dir,
+    '/home/deck/retrodeck/saves/wii/dolphin/title/00010000/52534245/data'
+  )
+  assert.equal(wii.unsyncableReason, undefined)
+
+  const gc = retroDeck({ romPath: '/home/deck/retrodeck/roms/gc/game.rvz', system: 'gc' })
+  assert.equal(gc.saves?.match, 'shared')
+})
+
+test('with no game id, a Wii game keeps the NAND shared and says why', () => {
+  const wii = retroDeck({ romPath: '/home/deck/retrodeck/roms/wii/other.gcz', system: 'wii' })
+  assert.equal(wii.saves?.match, 'shared')
+  assert.equal(wii.saves?.dir, '/home/deck/retrodeck/saves/wii/dolphin')
+  assert.match(localize(wii.unsyncableReason, ENGLISH) ?? '', /game id/i)
+})
+
 test('a shared memory card is not offered for per-game sync, but its states are', () => {
   const ps2 = retroDeck({ romPath: '/home/deck/retrodeck/roms/ps2/game.chd', system: 'ps2' })
   assert.equal(ps2.saves?.match, 'shared')
@@ -656,6 +676,19 @@ test('a launcher script whose name is not the save folder is mapped, not guessed
   const gc = emuDeck({ romPath: `${HOME}/Emulation/roms/gc/game.rvz`, system: 'gc' })
   assert.equal(gc.states?.dir, `${HOME}/Emulation/saves/dolphin/StateSaves`)
   assert.equal(gc.states?.stem, 'GALE01')
+})
+
+test('EmuDeck resolves a Wii game to its title folder in the linked NAND', () => {
+  const wii = emuDeck({ romPath: `${HOME}/Emulation/roms/wii/game.rvz`, system: 'wii' })
+  assert.equal(wii.saves?.match, 'directory')
+  assert.equal(wii.saves?.dir, `${HOME}/Emulation/saves/dolphin/Wii/title/00010000/52534245/data`)
+
+  const unread = emuDeck({ romPath: `${HOME}/Emulation/roms/wii/other.gcz`, system: 'wii' })
+  assert.equal(unread.saves?.dir, `${HOME}/Emulation/saves/dolphin/Wii`)
+
+  const gc = emuDeck({ romPath: `${HOME}/Emulation/roms/gc/game.rvz`, system: 'gc' })
+  assert.equal(gc.saves?.match, 'shared')
+  assert.equal(gc.saves?.dir, `${HOME}/Emulation/saves/dolphin/GC`)
 })
 
 test('EmuDeck resolves a Switch game to its title-id folder', () => {
@@ -1451,23 +1484,4 @@ test('every core RomMix loads has the name it files saves under', () => {
   cores.delete(null)
   const unnamed = [...cores].filter((core) => coreLibraryName(core) === null)
   assert.deepEqual(unnamed, [])
-})
-
-test('a Wii game syncs its own title folder out of the NAND RetroDECK links', () => {
-  const wii = retroDeck({ romPath: '/home/deck/retrodeck/roms/wii/game.rvz', system: 'wii' })
-  assert.equal(wii.saves?.match, 'directory')
-  assert.equal(
-    wii.saves?.dir,
-    '/home/deck/retrodeck/saves/wii/dolphin/title/00010000/52534245/data'
-  )
-  assert.equal(wii.unsyncableReason, undefined)
-})
-
-test('EmuDeck resolves a Wii game to its title folder in the linked NAND', () => {
-  const wii = emuDeck({ romPath: `${HOME}/Emulation/roms/wii/game.rvz`, system: 'wii' })
-  assert.equal(wii.saves?.match, 'directory')
-  assert.equal(wii.saves?.dir, `${HOME}/Emulation/saves/dolphin/Wii/title/00010000/52534245/data`)
-
-  const gc = emuDeck({ romPath: `${HOME}/Emulation/roms/gc/game.rvz`, system: 'gc' })
-  assert.equal(gc.saves?.match, 'shared')
 })
