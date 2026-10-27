@@ -1136,6 +1136,11 @@ describe('pausing on purpose', () => {
     const root = scratch()
     process.env.ROMMIX_HOME = root
     const store = new Store(join(root, 'config'))
+    // Pressed only once the transfer is listening for it. A pause that lands
+    // while the queue is still planning finds no listener here, and a fixed
+    // wait cannot promise that it will not on a busy machine.
+    let heard = (): void => undefined
+    const listening = new Promise<void>((resolve) => (heard = resolve))
     const client = {
       async supportsRange() {
         return true
@@ -1156,6 +1161,7 @@ describe('pausing on purpose', () => {
         onProgress({ received: 4, total: 10 })
         await new Promise((_resolve, reject) => {
           signal.addEventListener('abort', () => reject(new RommError('aborted')), { once: true })
+          heard()
         })
       }
     } as unknown as RommClient
@@ -1166,7 +1172,7 @@ describe('pausing on purpose', () => {
     )
 
     await downloads.enqueue(rom())
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    await listening
     downloads.pause(1)
     const item = await settled(downloads, 1)
 
