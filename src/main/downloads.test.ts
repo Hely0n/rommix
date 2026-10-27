@@ -386,8 +386,26 @@ describe('changing the order of the queue', () => {
     Object.fromEntries(three().map((game) => [game.id, game]))
 
   test('a promoted transfer takes the place of the one on the wire', async () => {
-    const { downloads } = manager({ contents: '0123456789' })
+    const { downloads, client } = manager({ contents: '0123456789' })
+    // Held on the wire until it is overtaken. A transfer that finishes while
+    // the other two are still being queued has no place left to give up, and
+    // nothing short of holding it stops that on a busy machine.
+    let heard = (): void => undefined
+    const listening = new Promise<void>((resolve) => (heard = resolve))
+    Object.assign(client, {
+      downloadRom: (
+        _game: RommRom,
+        _destination: string,
+        _progress: unknown,
+        signal: AbortSignal
+      ) =>
+        new Promise((_resolve, reject) => {
+          signal.addEventListener('abort', () => reject(new RommError('aborted')), { once: true })
+          heard()
+        })
+    })
     for (const game of three()) await downloads.enqueue(game)
+    await listening
 
     downloads.promote(3)
 
