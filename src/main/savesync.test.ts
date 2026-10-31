@@ -1112,6 +1112,16 @@ describe('an archive filed against a game whose saves are files', () => {
     assert.equal(existsSync(join(saveDir, 'ULUS10064DATA00')), false)
     assert.equal(existsSync(join(backups, '7')), false)
   })
+
+  test('is marked as going nowhere on the game screen, as the pull leaves it', async () => {
+    const { sync, target } = setUp({
+      saves: [save({ file_name: 'Sonic the Hedgehog (USA).rommix-save.zip' })]
+    })
+
+    const [asset] = await sync.listAssets(7, target)
+
+    assert.equal(asset.forAnotherEmulator, true)
+  })
 })
 
 describe('a save the emulator keeps as a folder', () => {
@@ -1921,6 +1931,33 @@ describe('PPSSPP, whose save folders begin with the disc id', () => {
       [{ fileName: 'Sonic the Hedgehog (USA).zip', slot: 'autosave' }]
     )
     assert.deepEqual(await entries(uploaded[0].bytes), [`${OWN}/DATA.BIN`, `${SETTINGS}/PARAM.SFO`])
+  })
+
+  test('a push that fails says so rather than giving a reason', async () => {
+    // A reason outranks the count on the game screen, so one here would hide
+    // that the save never left this device.
+    const { sync, target, saveData } = ppsspp({ uploadFails: true })
+    folder(saveData, OWN, { 'DATA.BIN': 'progress' })
+
+    const result = await sync.pushNow(target)
+
+    assert.equal(result.failed, 1)
+    assert.equal(result.skippedReason, null)
+  })
+
+  test('a pull with nothing newer gives no reason', async () => {
+    const { sync, target, saveData } = ppsspp()
+    folder(saveData, OWN, { 'DATA.BIN': 'progress' })
+
+    assert.equal((await sync.pullNow(target)).skippedReason, null)
+  })
+
+  test('a file among the folders is marked as going nowhere', async () => {
+    const { sync, target } = ppsspp({ saves: [slotted({ file_name: 'game.bin' })] })
+
+    const [asset] = await sync.listAssets(7, target)
+
+    assert.equal(asset.forAnotherEmulator, true)
   })
 
   test("another game's save is not this game's to send", async () => {

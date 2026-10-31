@@ -617,8 +617,6 @@ export const fr: Catalog = {
     "PrimeHack garde une seule carte mémoire pour tous les jeux : aucune sauvegarde n'appartient donc à celui-ci. Les états de sauvegarde sont synchronisés.",
   'saves.ppsspp':
     "PPSSPP classe ses sauvegardes sous l'identifiant de jeu inscrit dans l'image disque, que RomMix sait lire dans une image ISO ou CSO mais pas dans celle-ci.",
-  'saves.ppssppStates':
-    "PPSSPP nomme ses états de sauvegarde d'après l'identifiant et la version du jeu plutôt que d'après la ROM : seules ses sauvegardes sont synchronisées.",
   'saves.rpcs3':
     "RPCS3 classe ses sauvegardes sous l'identifiant de titre PS3 plutôt que sous le nom de la ROM, que RomMix ne peut pas rattacher à ce jeu.",
   'saves.cemu':

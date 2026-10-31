@@ -715,9 +715,10 @@ test('EmuDeck resolves a PSP game to the PPSSPP folders that begin with its disc
   assert.equal(psp.saves?.prefix, 'ULUS10064')
   assert.equal(psp.emulator, 'ppsspp')
   // A state is named after the id and the game's version, `ULUS10064_1.00_0.ppst`,
-  // which no matcher here reads; the reason says so when a sync moves nothing.
+  // which no matcher here reads. No reason goes with that: the saves do sync, and
+  // a reason would stand in for what a sync that moved nothing has to report.
   assert.equal(psp.states?.match, 'shared')
-  assert.match(localize(psp.unsyncableReason, ENGLISH) ?? '', /state/i)
+  assert.equal(psp.unsyncableReason, undefined)
 })
 
 test('with no disc id, EmuDeck keeps the PPSSPP saves shared and says why', () => {

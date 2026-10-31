@@ -68,7 +68,7 @@ import { extractZip, zipDirectory, zipEntryNames, zipFolders } from './zip.ts'
  * decided in `savefiles.ts`, and which copy on the server answers to which
  * file here in `savepairing.ts`.
  *
- * Three shapes of save exist and each is handled differently:
+ * Four shapes of save exist and each is handled differently:
  *
  *  - `rom-stem`   files named after the ROM. Matched on the stem, uploaded
  *                 individually, which is what keeps a libretro `.srm` readable
@@ -76,6 +76,9 @@ import { extractZip, zipDirectory, zipEntryNames, zipFolders } from './zip.ts'
  *  - `directory`  a folder keyed by title id — Eden and the other Switch
  *                 emulators. Carried as one zip, because the files inside carry
  *                 no name that ties them to a game.
+ *  - `prefix`     the folders of one game among every game's, as PPSSPP keeps
+ *                 them. Carried as one zip of those folders by name, in the
+ *                 shared slot, which is where other clients look for it.
  *  - `shared`     a memory card or NAND every game writes to. Skipped, with a
  *                 reason the buttons can show, rather than uploading one game's
  *                 card under another game's id.
@@ -376,7 +379,7 @@ export class SaveSync {
    * marks a row by asking this, and the pull leaves that row by asking it too.
    *
    * False for a battery save, which is taken whatever wrote it. True for a
-   * state and for a directory save carried as an archive; `pullKind` says why.
+   * state and for a save carried as an archive; `pullKind` says why.
    */
   private tagDecides(kind: 'save' | 'state', location: SaveLocation): boolean {
     return !(kind === 'save' && location.match === 'rom-stem')
@@ -639,6 +642,12 @@ export class SaveSync {
      * `unsyncableReason` is already giving.
      */
     const byTag = { save: false, state: false }
+    /** Where each kind lands on this device, for what `fitsLocation` refuses. */
+    const landsIn: { save?: SaveLocation; state?: SaveLocation } = {}
+    const cannotLand = (kind: 'save' | 'state', fileName: string): boolean => {
+      const location = landsIn[kind]
+      return location !== undefined && !fitsLocation(location, fileName)
+    }
     if (local) {
       const paths = this.locate(local)
       tag = this.tagFor(paths, local)
@@ -647,6 +656,7 @@ export class SaveSync {
         const location = this.locationFor(paths, kind)
         if (!location) continue
         byTag[kind] = this.tagDecides(kind, location)
+        landsIn[kind] = location
         const found = await this.findLocal(location, local.rom, local.romPath, kind)
         for (const file of found) {
           localAssets.set(`${kind}:${file.fileName.toLowerCase()}`, file)
@@ -725,7 +735,8 @@ export class SaveSync {
         sizeBytes: item.file_size_bytes,
         emulator: item.emulator,
         forAnotherEmulator:
-          byTag[kind] && tag !== null && !acceptsTag(tag, item.emulator, alsoAccepts),
+          (byTag[kind] && tag !== null && !acceptsTag(tag, item.emulator, alsoAccepts)) ||
+          cannotLand(kind, item.file_name),
         localPath: localFile?.path ?? null,
         localModifiedAt: localFile ? new Date(localFile.mtimeMs).toISOString() : null,
         fromThisDevice,
@@ -1307,12 +1318,11 @@ export class SaveSync {
      * it.
      *
      * Only the permissive case is named below, so everything else keeps the
-     * filter by default — which is what covers the third shape, a directory
-     * save carried as one archive. That is an emulator's own tree and unpacks
-     * over another's exactly as a state loads over one, and `match:
-     * 'directory'` is what says a folder is the unit of save data. A shape
-     * added later is filtered until somebody decides otherwise here, which is
-     * the right way round.
+     * filter by default — which is what covers the shapes carried as one
+     * archive. That is an emulator's own tree and unpacks over another's exactly
+     * as a state loads over one, and `match: 'directory'` or `'prefix'` is what
+     * says a folder is the unit of save data. A shape added later is filtered
+     * until somebody decides otherwise here, which is the right way round.
      */
     const tag = this.tagFor(paths, target)
     const usable = this.tagDecides(kind, location)

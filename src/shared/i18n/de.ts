@@ -622,8 +622,6 @@ export const de: Catalog = {
     'PrimeHack führt eine einzige Memory Card für alle Spiele, deshalb gehört keine Speicherdatei zu diesem einen Spiel. Savestates werden synchronisiert.',
   'saves.ppsspp':
     'PPSSPP legt Spielstände unter der im Disc-Image hinterlegten Spiel-ID ab, die RomMix aus ISO- und CSO-Images lesen kann, aus diesem aber nicht.',
-  'saves.ppssppStates':
-    'PPSSPP benennt Savestates nach Spiel-ID und Version statt nach dem ROM, deshalb werden nur die Spielstände synchronisiert.',
   'saves.rpcs3':
     'RPCS3 legt Spielstände unter der PS3-Title-ID ab statt unter dem ROM-Namen, die RomMix diesem Spiel nicht zuordnen kann.',
   'saves.cemu':

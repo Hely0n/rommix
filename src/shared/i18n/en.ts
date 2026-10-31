@@ -618,8 +618,6 @@ export const en = {
     'PrimeHack keeps one memory card for every game, so there is no save file that belongs to this one. Save states are synced.',
   'saves.ppsspp':
     'PPSSPP files saves under the game id inside the disc image, which RomMix can read from an ISO or CSO image but not from this one.',
-  'saves.ppssppStates':
-    'PPSSPP names its save states after the game id and version rather than the ROM, so only its saves are synced.',
   'saves.rpcs3':
     'RPCS3 files saves under the PS3 title id rather than the ROM name, which RomMix cannot match to this game.',
   'saves.cemu':

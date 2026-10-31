@@ -74,8 +74,9 @@ export function pspGameId(env: SaveEnvironment, romPath: string): string | null 
  * holds every game's, which an archive of it would carry up under this one and
  * back down over theirs. Without an id the directory stays shared.
  *
- * The reason given beside a readable id is about the states, left shared: PPSSPP
- * names them after the id and the game's version, which nothing matches on.
+ * With one, no reason is given, though the states stay shared: PPSSPP names them
+ * after the id and the game's version, which nothing matches on. A reason stands
+ * in for what a sync that moved nothing would report, and these saves do sync.
  */
 export function ppssppSaves(
   ctx: SaveContext,
@@ -84,7 +85,7 @@ export function ppssppSaves(
   if (!dir) return { saves: null }
   const id = pspGameId(ctx.env, ctx.romPath)
   if (!id) return { saves: shared(dir), unsyncableReason: 'saves.ppsspp' }
-  return { saves: prefixed(dir, id), unsyncableReason: 'saves.ppssppStates' }
+  return { saves: prefixed(dir, id) }
 }
 
 /** A reader for the disc inside the file, or null where the container is not one read here. */

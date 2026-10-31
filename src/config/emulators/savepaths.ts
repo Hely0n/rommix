@@ -26,9 +26,9 @@ import type { Text } from '@shared/i18n'
  *  - `rom-stem`   named after the ROM, which is what libretro and most
  *                 standalone emulators do. Matched on the file stem.
  *  - `directory`  the location *is* this game's data — a folder keyed by title
- *                 id or game id, as Eden, PPSSPP and RPCS3 keep it. Synced as
- *                 one archive, because the individual files inside carry no
- *                 name that ties them to a ROM.
+ *                 id or game id, as Eden and RPCS3 keep it. Synced as one
+ *                 archive, because the individual files inside carry no name
+ *                 that ties them to a ROM.
  *  - `prefix`     the folders directly under the location whose names begin
  *                 with `prefix`, as PPSSPP keeps `ULUS10064DATA00` beside every
  *                 other game's. Synced as one archive of those folders by name;
